@@ -1,0 +1,12 @@
+{
+    "asset": "119d95202b8b6e54d8c4846581b42725",
+    "fileName": "019ed4e5-fc24-79a3-8227-ef05253b1591.pose.json",
+    "prompt": "Humanoid jump up and land, jump loop in-place.",
+    "negativePrompt": "",
+    "model": "unity-text-to-motion",
+    "modelName": "Text to Motion",
+    "customSeed": 530941909,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "isTrimmed": false
+}

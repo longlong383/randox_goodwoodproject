@@ -21,12 +21,14 @@
   <Project Path="Unity.PerformanceTesting.Editor.csproj" />
   <Project Path="Unity.AI.Assistant.UI.Editor.csproj" />
   <Project Path="UnityEngine.TestRunner.csproj" />
+  <Project Path="glTFast.Editor.csproj" />
   <Project Path="Unity.AI.Toolkit.Utility.csproj" />
   <Project Path="Unity.AppUI.Redux.csproj" />
   <Project Path="Unity.AI.MCP.Editor.csproj" />
   <Project Path="Unity.Burst.csproj" />
   <Project Path="Unity.AI.Generators.Redux.csproj" />
   <Project Path="Unity.InferenceEngine.Editor.Visualizer.csproj" />
+  <Project Path="glTFast.csproj" />
   <Project Path="Unity.VisualScripting.Flow.Editor.csproj" />
   <Project Path="Unity.VisualStudio.Editor.csproj" />
   <Project Path="Unity.InputSystem.csproj" />
@@ -35,6 +37,7 @@
   <Project Path="Unity.AI.Assistant.Editor.csproj" />
   <Project Path="Unity.Searcher.Editor.csproj" />
   <Project Path="Unity.InferenceEngine.Tokenization.csproj" />
+  <Project Path="glTFast.Documentation.Examples.csproj" />
   <Project Path="UnityEditor.TestRunner.csproj" />
   <Project Path="Unity.VisualScripting.Core.csproj" />
   <Project Path="Unity.RenderPipelines.Universal.Runtime.csproj" />
@@ -52,6 +55,7 @@
   <Project Path="Unity.AI.Animate.csproj" />
   <Project Path="Unity.AI.Assistant.Tools.Editor.csproj" />
   <Project Path="Unity.TextMeshPro.csproj" />
+  <Project Path="glTFast.Export.csproj" />
   <Project Path="Unity.TextMeshPro.Editor.csproj" />
   <Project Path="Unity.AppUI.Navigation.Editor.csproj" />
   <Project Path="Unity.Burst.Editor.csproj" />
@@ -66,6 +70,7 @@
   <Project Path="Unity.AI.Search.Editor.csproj" />
   <Project Path="Unity.AI.Assistant.Agent.Dynamic.Extension.Editor.csproj" />
   <Project Path="UnityEditor.UI.csproj" />
+  <Project Path="glTFast.Newtonsoft.csproj" />
   <Project Path="Unity.AI.Tracing.csproj" />
   <Project Path="Unity.RenderPipelines.Universal.2D.Editor.Overrides.csproj" />
   <Project Path="Unity.2D.Sprite.Editor.csproj" />
@@ -107,6 +112,7 @@
   <Project Path="Unity.RenderPipeline.Universal.ShaderLibrary.csproj" />
   <Project Path="Unity.AI.Assistant.Bridge.Editor.csproj" />
   <Project Path="Unity.AI.Toolkit.Compliance.csproj" />
+  <Project Path="glTFast.dots.csproj" />
   <Project Path="Unity.InternalAPIEngineBridge.004.csproj" />
   <Project Path="Unity.InputSystem.DocCodeSamples.csproj" />
   <Project Path="Unity.RenderPipelines.Universal.Shaders.csproj" />

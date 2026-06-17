@@ -22,6 +22,16 @@ public class PlayerController : MonoBehaviour
     private BoxCollider boxCollider;
     private Vector3 originalColliderSize;
     private Vector3 originalColliderCenter;
+    private CapsuleCollider capsuleCollider;
+    private float originalCapsuleHeight;
+    private Vector3 originalCapsuleCenter;
+
+    [Header("Rotation Settings")]
+    public float maxRotationAngle = 15f;
+    public float rotationSpeed = 10f;
+
+    [Header("Ground Level")]
+    public float groundY = 0.5f;
 
     [Header("Input System Actions")]
     private InputAction moveAction;
@@ -38,12 +48,21 @@ public class PlayerController : MonoBehaviour
             originalColliderSize = boxCollider.size;
             originalColliderCenter = boxCollider.center;
         }
+        capsuleCollider = GetComponent<CapsuleCollider>();
+        if (capsuleCollider != null)
+        {
+            originalCapsuleHeight = capsuleCollider.height;
+            originalCapsuleCenter = capsuleCollider.center;
+        }
     }
 
     private void Start()
     {
         // Tag the player to ensure other scripts detect collisions correctly
         gameObject.tag = "Player";
+
+        // Auto-detect ground Y from initial position
+        groundY = transform.position.y;
 
         // Bind new Input System actions
         var playerMap = InputSystem.actions?.FindActionMap("Player");
@@ -126,6 +145,11 @@ public class PlayerController : MonoBehaviour
                     boxCollider.size = new Vector3(originalColliderSize.x, originalColliderSize.y * 0.5f, originalColliderSize.z);
                     boxCollider.center = new Vector3(originalColliderCenter.x, originalColliderCenter.y * 0.5f, originalColliderCenter.z);
                 }
+                if (capsuleCollider != null)
+                {
+                    capsuleCollider.height = originalCapsuleHeight * 0.5f;
+                    capsuleCollider.center = new Vector3(originalCapsuleCenter.x, originalCapsuleCenter.y * 0.5f, originalCapsuleCenter.z);
+                }
             }
         }
     }
@@ -139,7 +163,7 @@ public class PlayerController : MonoBehaviour
     {
         // Interpolate horizontal position
         float targetX = currentLane * laneWidth;
-        float currentY = 0.5f; // Ground level Y offset (half player scale height)
+        float currentY = groundY;
 
         // Interpolate Jump vertical position
         if (isJumping)
@@ -149,11 +173,11 @@ public class PlayerController : MonoBehaviour
             if (normalizedTime >= 1.0f)
             {
                 isJumping = false;
-                currentY = 0.5f;
+                currentY = groundY;
             }
             else
             {
-                currentY = 0.5f + Mathf.Sin(normalizedTime * Mathf.PI) * jumpHeight;
+                currentY = groundY + Mathf.Sin(normalizedTime * Mathf.PI) * jumpHeight;
             }
         }
 
@@ -171,10 +195,27 @@ public class PlayerController : MonoBehaviour
                     boxCollider.size = originalColliderSize;
                     boxCollider.center = originalColliderCenter;
                 }
+                if (capsuleCollider != null)
+                {
+                    capsuleCollider.height = originalCapsuleHeight;
+                    capsuleCollider.center = originalCapsuleCenter;
+                }
             }
             else
             {
-                currentY = 0.25f; // Half height center
+                // Self-detect feet vs center pivoted model to handle sliding currentY height correctly
+                bool isFeetPivoted = false;
+                if (capsuleCollider != null && capsuleCollider.center.y > 0.1f) isFeetPivoted = true;
+                if (boxCollider != null && boxCollider.center.y > 0.1f) isFeetPivoted = true;
+
+                if (isFeetPivoted)
+                {
+                    currentY = groundY;
+                }
+                else
+                {
+                    currentY = groundY - (originalScale.y * 0.5f); // Lower by half height for center-pivoted models
+                }
             }
         }
 
@@ -182,5 +223,16 @@ public class PlayerController : MonoBehaviour
         Vector3 currentPos = transform.position;
         float newX = Mathf.MoveTowards(currentPos.x, targetX, laneSwitchSpeed * Time.deltaTime);
         transform.position = new Vector3(newX, currentY, -6f);
+
+        // Smoothly rotate body based on horizontal movement direction
+        float targetYRotation = 0f;
+        float diffX = newX - currentPos.x;
+        if (Mathf.Abs(diffX) > 0.001f)
+        {
+            targetYRotation = Mathf.Sign(diffX) * maxRotationAngle;
+        }
+
+        Quaternion targetRotation = Quaternion.Euler(0f, targetYRotation, 0f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
     }
 }
