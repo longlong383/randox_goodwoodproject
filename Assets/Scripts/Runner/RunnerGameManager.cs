@@ -8,6 +8,8 @@ public class RunnerGameManager : MonoBehaviour
     [Header("Prefabs")]
     [Tooltip("The Running Ground prefab")]
     public GameObject groundPrefab;
+    [Tooltip("The Future Tunnel prefab")]
+    public GameObject tunnelPrefab;
     [Tooltip("Collectible prefabs: Biochip, Female Hormone, General Hormone")]
     public GameObject[] collectiblePrefabs;
     [Tooltip("Obstacle prefab: Virus")]
@@ -28,6 +30,11 @@ public class RunnerGameManager : MonoBehaviour
     [Tooltip("Distance the world must scroll before the next ground tile is spawned. Set equal to groundTileLength for seamless ground; set larger to create gaps between tiles.")]
     public float groundSpawnInterval = 4.72f;
 
+    [Header("Tunnel Settings")]
+    public float tunnelTileLength = 88.15f;
+    public int initialTunnelTiles = 6;
+    public float tunnelSpawnInterval = 88.15f;
+
     [Header("Obstacle & Collectible Spawning")]
     public float spawnInterval = 1.0f;
     private float spawnTimer;
@@ -42,11 +49,13 @@ public class RunnerGameManager : MonoBehaviour
 
     // Object Pooling lists
     private List<GameObject> groundPool = new List<GameObject>();
+    private List<GameObject> tunnelPool = new List<GameObject>();
     private List<GameObject> collectiblePool = new List<GameObject>();
     private List<GameObject> obstaclePool = new List<GameObject>();
 
     // Tracking active objects for scrolling and recycling
     private List<GameObject> activeGrounds = new List<GameObject>();
+    private List<GameObject> activeTunnels = new List<GameObject>();
     private List<GameObject> activeCollectibles = new List<GameObject>();
     private List<GameObject> activeObstacles = new List<GameObject>();
 
@@ -54,6 +63,7 @@ public class RunnerGameManager : MonoBehaviour
 
     // Distance traveled since the last ground tile was spawned (drives interval spawning)
     private float groundDistanceAccumulator;
+    private float tunnelDistanceAccumulator;
 
     private void Awake()
     {
@@ -86,6 +96,7 @@ public class RunnerGameManager : MonoBehaviour
         isGameOver = false;
         spawnTimer = 0f;
         groundDistanceAccumulator = 0f;
+        tunnelDistanceAccumulator = 0f;
 
         // Initialize Spawning Z heights
         nextGroundZ = -12f; // Start ground tiles slightly behind the camera/player
@@ -96,6 +107,17 @@ public class RunnerGameManager : MonoBehaviour
         {
             SpawnGroundTile(groundZ);
             groundZ += groundTileLength;
+        }
+
+        // Initial tunnel generation: lay tunnel tiles starting from behind the player
+        if (tunnelPrefab != null)
+        {
+            float tunnelZ = 50.4f - tunnelTileLength;
+            for (int i = 0; i < initialTunnelTiles; i++)
+            {
+                SpawnTunnelTile(tunnelZ);
+                tunnelZ += tunnelTileLength;
+            }
         }
     }
 
@@ -148,6 +170,32 @@ public class RunnerGameManager : MonoBehaviour
             SpawnGroundTileAhead();
         }
 
+        // --- SCROLL TUNNELS ---
+        if (tunnelPrefab != null)
+        {
+            for (int i = activeTunnels.Count - 1; i >= 0; i--)
+            {
+                GameObject tunnel = activeTunnels[i];
+                tunnel.transform.Translate(Vector3.back * scrollStep, Space.World);
+
+                // If tunnel segment has passed completely behind camera (Z < -25)
+                if (tunnel.transform.position.z < -25f)
+                {
+                    activeTunnels.RemoveAt(i);
+                    tunnel.SetActive(false);
+                    tunnelPool.Add(tunnel);
+                }
+            }
+
+            // Spawn new tunnel tiles at fixed distance intervals as the world scrolls
+            tunnelDistanceAccumulator += scrollStep;
+            while (tunnelDistanceAccumulator >= tunnelSpawnInterval)
+            {
+                tunnelDistanceAccumulator -= tunnelSpawnInterval;
+                SpawnTunnelTileAhead();
+            }
+        }
+
         // 2. Scroll and recycle Collectibles
         for (int i = activeCollectibles.Count - 1; i >= 0; i--)
         {
@@ -175,6 +223,49 @@ public class RunnerGameManager : MonoBehaviour
                 obstaclePool.Add(obs);
             }
         }
+    }
+
+    private void SpawnTunnelTile(float zPosition)
+    {
+        GameObject tunnel;
+        if (tunnelPool.Count > 0)
+        {
+            tunnel = tunnelPool[0];
+            tunnelPool.RemoveAt(0);
+            tunnel.SetActive(true);
+        }
+        else
+        {
+            tunnel = Instantiate(tunnelPrefab, transform);
+            tunnel.transform.rotation = Quaternion.identity;
+            tunnel.transform.localScale = new Vector3(3f, 3f, 3f);
+        }
+
+        tunnel.transform.position = new Vector3(0f, -0.1f, zPosition);
+        activeTunnels.Add(tunnel);
+    }
+
+    private void SpawnTunnelTileAhead()
+    {
+        float spawnZ;
+        if (activeTunnels.Count == 0)
+        {
+            spawnZ = 50.4f - tunnelTileLength;
+        }
+        else
+        {
+            float frontmostZ = float.NegativeInfinity;
+            foreach (var t in activeTunnels)
+            {
+                if (t.transform.position.z > frontmostZ)
+                {
+                    frontmostZ = t.transform.position.z;
+                }
+            }
+            spawnZ = frontmostZ + tunnelTileLength;
+        }
+
+        SpawnTunnelTile(spawnZ);
     }
 
     private void SpawnGroundTile(float zPosition)
@@ -368,6 +459,11 @@ public class RunnerGameManager : MonoBehaviour
         isGameOver = true;
         isPlaying = false;
         currentSpeed = 0f;
+
+        if (RunnerUIController.Instance != null)
+        {
+            RunnerUIController.Instance.ShowGameOver();
+        }
     }
 
     private void ClearActiveObjects()
@@ -378,6 +474,13 @@ public class RunnerGameManager : MonoBehaviour
             groundPool.Add(obj);
         }
         activeGrounds.Clear();
+
+        foreach (var obj in activeTunnels)
+        {
+            obj.SetActive(false);
+            tunnelPool.Add(obj);
+        }
+        activeTunnels.Clear();
 
         foreach (var obj in activeCollectibles)
         {
@@ -392,58 +495,5 @@ public class RunnerGameManager : MonoBehaviour
             obstaclePool.Add(obj);
         }
         activeObstacles.Clear();
-    }
-
-    // Standard high-quality IMGUI HUD for 100% reliable out-of-the-box user feedback
-    private void OnGUI()
-    {
-        GUIStyle style = new GUIStyle();
-        style.fontSize = 24;
-        style.normal.textColor = Color.white;
-        style.fontStyle = FontStyle.Bold;
-
-        // 1. Score display
-        GUI.Label(new Rect(20, 20, 400, 40), $"Score: {Mathf.FloorToInt(score)}", style);
-
-        // 2. Collectibles list
-        GUIStyle colStyle = new GUIStyle(style);
-        colStyle.fontSize = 18;
-        colStyle.normal.textColor = Color.cyan;
-        GUI.Label(new Rect(20, 60, 400, 30), $"Biochips: {biochipsCollected}", colStyle);
-        
-        colStyle.normal.textColor = Color.magenta;
-        GUI.Label(new Rect(20, 90, 400, 30), $"Female Hormone Kits: {femaleHormoneCollected}", colStyle);
-        
-        colStyle.normal.textColor = Color.yellow;
-        GUI.Label(new Rect(20, 120, 400, 30), $"General Hormone Kits: {generalHormoneCollected}", colStyle);
-
-        // 3. Game Over window
-        if (isGameOver)
-        {
-            // Dim background
-            Texture2D blackTexture = new Texture2D(1, 1);
-            blackTexture.SetPixel(0, 0, new Color(0, 0, 0, 0.6f));
-            blackTexture.Apply();
-            GUI.skin.box.normal.background = blackTexture;
-            GUI.Box(new Rect(0, 0, Screen.width, Screen.height), GUIContent.none);
-
-            // Window
-            Rect windowRect = new Rect(Screen.width / 2 - 150, Screen.height / 2 - 120, 300, 240);
-            GUI.Box(windowRect, "GAME OVER", GUI.skin.box);
-
-            GUIStyle titleStyle = new GUIStyle(style);
-            titleStyle.alignment = TextAnchor.MiddleCenter;
-            GUI.Label(new Rect(windowRect.x, windowRect.y + 20, windowRect.width, 40), "GAME OVER", titleStyle);
-
-            GUIStyle resultStyle = new Rect(windowRect.x, windowRect.y + 70, windowRect.width, 30).Contains(Event.current.mousePosition) ? colStyle : colStyle;
-            resultStyle.alignment = TextAnchor.MiddleCenter;
-            GUI.Label(new Rect(windowRect.x, windowRect.y + 70, windowRect.width, 30), $"Final Score: {Mathf.FloorToInt(score)}", resultStyle);
-            GUI.Label(new Rect(windowRect.x, windowRect.y + 100, windowRect.width, 30), $"Biochips collected: {biochipsCollected}", resultStyle);
-
-            if (GUI.Button(new Rect(windowRect.x + 50, windowRect.y + 160, 200, 45), "TAP TO RESTART"))
-            {
-                StartGame();
-            }
-        }
     }
 }
