@@ -1,0 +1,12 @@
+{
+    "asset": "75856bfc5772faa43b02ab04f536be30",
+    "fileName": "019ed4e5-fa1b-7f67-bd27-72e786960b86.pose.json",
+    "prompt": "Humanoid run loop, loopable, in-place, steady pace.",
+    "negativePrompt": "",
+    "model": "unity-text-to-motion",
+    "modelName": "Text to Motion",
+    "customSeed": 1000866569,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "isTrimmed": false
+}

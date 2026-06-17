@@ -8,8 +8,8 @@ public class RunnerGameManager : MonoBehaviour
     [Header("Prefabs")]
     [Tooltip("The Running Ground prefab")]
     public GameObject groundPrefab;
-    [Tooltip("Building prefabs: Building 1, Building 2, Building 4")]
-    public GameObject[] buildingPrefabs;
+    [Tooltip("The Future Tunnel prefab")]
+    public GameObject tunnelPrefab;
     [Tooltip("Collectible prefabs: Biochip, Female Hormone, General Hormone")]
     public GameObject[] collectiblePrefabs;
     [Tooltip("Obstacle prefab: Virus")]
@@ -25,12 +25,15 @@ public class RunnerGameManager : MonoBehaviour
     public float laneWidth = 2.0f;
     public float spawnDistanceZ = 60f;
     public float groundTileLength = 4.72f;
-    public int initialGroundTiles = 30;
+    [Tooltip("How many ground tiles are laid ahead of the player. More tiles = ground extends (and new tiles spawn) farther into the distance. ~80 tiles reaches roughly 365 units ahead.")]
+    public int initialGroundTiles = 80;
+    [Tooltip("Distance the world must scroll before the next ground tile is spawned. Set equal to groundTileLength for seamless ground; set larger to create gaps between tiles.")]
+    public float groundSpawnInterval = 4.72f;
 
-    [Header("Building Settings")]
-    public float leftBuildingX = -12f;
-    public float rightBuildingX = 12f;
-    public float buildingSpawnDistanceZ = 80f;
+    [Header("Tunnel Settings")]
+    public float tunnelTileLength = 88.15f;
+    public int initialTunnelTiles = 6;
+    public float tunnelSpawnInterval = 88.15f;
 
     [Header("Obstacle & Collectible Spawning")]
     public float spawnInterval = 1.0f;
@@ -46,19 +49,21 @@ public class RunnerGameManager : MonoBehaviour
 
     // Object Pooling lists
     private List<GameObject> groundPool = new List<GameObject>();
-    private List<GameObject> buildingPool = new List<GameObject>();
+    private List<GameObject> tunnelPool = new List<GameObject>();
     private List<GameObject> collectiblePool = new List<GameObject>();
     private List<GameObject> obstaclePool = new List<GameObject>();
 
     // Tracking active objects for scrolling and recycling
     private List<GameObject> activeGrounds = new List<GameObject>();
-    private List<GameObject> activeBuildings = new List<GameObject>();
+    private List<GameObject> activeTunnels = new List<GameObject>();
     private List<GameObject> activeCollectibles = new List<GameObject>();
     private List<GameObject> activeObstacles = new List<GameObject>();
 
     private float nextGroundZ;
-    private float nextLeftBuildingZ;
-    private float nextRightBuildingZ;
+
+    // Distance traveled since the last ground tile was spawned (drives interval spawning)
+    private float groundDistanceAccumulator;
+    private float tunnelDistanceAccumulator;
 
     private void Awake()
     {
@@ -90,23 +95,29 @@ public class RunnerGameManager : MonoBehaviour
         isPlaying = true;
         isGameOver = false;
         spawnTimer = 0f;
+        groundDistanceAccumulator = 0f;
+        tunnelDistanceAccumulator = 0f;
 
         // Initialize Spawning Z heights
         nextGroundZ = -12f; // Start ground tiles slightly behind the camera/player
-        nextLeftBuildingZ = -20f;
-        nextRightBuildingZ = -20f;
 
-        // Initial ground generation
+        // Initial ground generation: lay tiles end-to-end starting behind the player
+        float groundZ = nextGroundZ;
         for (int i = 0; i < initialGroundTiles; i++)
         {
-            SpawnGroundTile();
+            SpawnGroundTile(groundZ);
+            groundZ += groundTileLength;
         }
 
-        // Initial buildings generation to fill up the sides
-        for (int i = 0; i < 8; i++)
+        // Initial tunnel generation: lay tunnel tiles starting from behind the player
+        if (tunnelPrefab != null)
         {
-            SpawnBuildingSide(true);
-            SpawnBuildingSide(false);
+            float tunnelZ = 50.4f - tunnelTileLength;
+            for (int i = 0; i < initialTunnelTiles; i++)
+            {
+                SpawnTunnelTile(tunnelZ);
+                tunnelZ += tunnelTileLength;
+            }
         }
     }
 
@@ -136,7 +147,7 @@ public class RunnerGameManager : MonoBehaviour
     {
         float scrollStep = currentSpeed * Time.deltaTime;
 
-        // 1. Scroll and recycle Ground
+        // 1. Scroll Ground; return tiles to the pool once they pass behind the camera
         for (int i = activeGrounds.Count - 1; i >= 0; i--)
         {
             GameObject ground = activeGrounds[i];
@@ -146,32 +157,46 @@ public class RunnerGameManager : MonoBehaviour
             if (ground.transform.position.z < -15f)
             {
                 activeGrounds.RemoveAt(i);
-                // Recycle to front
-                ground.transform.position = new Vector3(0f, 0f, nextGroundZ);
-                activeGrounds.Add(ground);
-                nextGroundZ += groundTileLength;
+                ground.SetActive(false);
+                groundPool.Add(ground);
             }
         }
 
-        // 2. Scroll and recycle Buildings
-        for (int i = activeBuildings.Count - 1; i >= 0; i--)
+        // Spawn new ground tiles at fixed distance intervals as the world scrolls
+        groundDistanceAccumulator += scrollStep;
+        while (groundDistanceAccumulator >= groundSpawnInterval)
         {
-            GameObject bld = activeBuildings[i];
-            bld.transform.Translate(Vector3.back * scrollStep, Space.World);
+            groundDistanceAccumulator -= groundSpawnInterval;
+            SpawnGroundTileAhead();
+        }
 
-            if (bld.transform.position.z < -30f)
+        // --- SCROLL TUNNELS ---
+        if (tunnelPrefab != null)
+        {
+            for (int i = activeTunnels.Count - 1; i >= 0; i--)
             {
-                activeBuildings.RemoveAt(i);
-                bld.SetActive(false);
-                buildingPool.Add(bld);
+                GameObject tunnel = activeTunnels[i];
+                tunnel.transform.Translate(Vector3.back * scrollStep, Space.World);
 
-                // Spawn a new building on its respective side
-                bool isLeft = bld.transform.position.x < 0;
-                SpawnBuildingSide(isLeft);
+                // If tunnel segment has passed completely behind camera (Z < -25)
+                if (tunnel.transform.position.z < -25f)
+                {
+                    activeTunnels.RemoveAt(i);
+                    tunnel.SetActive(false);
+                    tunnelPool.Add(tunnel);
+                }
+            }
+
+            // Spawn new tunnel tiles at fixed distance intervals as the world scrolls
+            tunnelDistanceAccumulator += scrollStep;
+            while (tunnelDistanceAccumulator >= tunnelSpawnInterval)
+            {
+                tunnelDistanceAccumulator -= tunnelSpawnInterval;
+                SpawnTunnelTileAhead();
             }
         }
 
-        // 3. Scroll and recycle Collectibles
+        // 2. Scroll and recycle Collectibles
         for (int i = activeCollectibles.Count - 1; i >= 0; i--)
         {
             GameObject coll = activeCollectibles[i];
@@ -185,7 +210,7 @@ public class RunnerGameManager : MonoBehaviour
             }
         }
 
-        // 4. Scroll and recycle Obstacles
+        // 3. Scroll and recycle Obstacles
         for (int i = activeObstacles.Count - 1; i >= 0; i--)
         {
             GameObject obs = activeObstacles[i];
@@ -200,7 +225,50 @@ public class RunnerGameManager : MonoBehaviour
         }
     }
 
-    private void SpawnGroundTile()
+    private void SpawnTunnelTile(float zPosition)
+    {
+        GameObject tunnel;
+        if (tunnelPool.Count > 0)
+        {
+            tunnel = tunnelPool[0];
+            tunnelPool.RemoveAt(0);
+            tunnel.SetActive(true);
+        }
+        else
+        {
+            tunnel = Instantiate(tunnelPrefab, transform);
+            tunnel.transform.rotation = Quaternion.identity;
+            tunnel.transform.localScale = new Vector3(3f, 3f, 3f);
+        }
+
+        tunnel.transform.position = new Vector3(0f, -0.1f, zPosition);
+        activeTunnels.Add(tunnel);
+    }
+
+    private void SpawnTunnelTileAhead()
+    {
+        float spawnZ;
+        if (activeTunnels.Count == 0)
+        {
+            spawnZ = 50.4f - tunnelTileLength;
+        }
+        else
+        {
+            float frontmostZ = float.NegativeInfinity;
+            foreach (var t in activeTunnels)
+            {
+                if (t.transform.position.z > frontmostZ)
+                {
+                    frontmostZ = t.transform.position.z;
+                }
+            }
+            spawnZ = frontmostZ + tunnelTileLength;
+        }
+
+        SpawnTunnelTile(spawnZ);
+    }
+
+    private void SpawnGroundTile(float zPosition)
     {
         GameObject ground;
         if (groundPool.Count > 0)
@@ -216,71 +284,33 @@ public class RunnerGameManager : MonoBehaviour
             ground.transform.rotation = Quaternion.Euler(270f, 90f, 0f);
         }
 
-        ground.transform.position = new Vector3(0f, 0f, nextGroundZ);
+        ground.transform.position = new Vector3(0f, 0f, zPosition);
         activeGrounds.Add(ground);
-        nextGroundZ += groundTileLength;
     }
 
-    private void SpawnBuildingSide(bool isLeft)
+    // Spawns the next ground tile directly ahead of the current front-most tile,
+    // keeping the ground seamless regardless of how far the world has scrolled.
+    private void SpawnGroundTileAhead()
     {
-        if (buildingPrefabs == null || buildingPrefabs.Length == 0) return;
-
-        float targetX = isLeft ? leftBuildingX : rightBuildingX;
-        float refZ = isLeft ? nextLeftBuildingZ : nextRightBuildingZ;
-
-        GameObject bld = null;
-        int prefabIndex = Random.Range(0, buildingPrefabs.Length);
-        GameObject chosenPrefab = buildingPrefabs[prefabIndex];
-
-        // Try to retrieve from pool of same prefab name
-        for (int i = 0; i < buildingPool.Count; i++)
+        float spawnZ;
+        if (activeGrounds.Count == 0)
         {
-            if (buildingPool[i].name.StartsWith(chosenPrefab.name))
+            spawnZ = nextGroundZ;
+        }
+        else
+        {
+            float frontmostZ = float.NegativeInfinity;
+            foreach (var g in activeGrounds)
             {
-                bld = buildingPool[i];
-                buildingPool.RemoveAt(i);
-                bld.SetActive(true);
-                break;
+                if (g.transform.position.z > frontmostZ)
+                {
+                    frontmostZ = g.transform.position.z;
+                }
             }
+            spawnZ = frontmostZ + groundTileLength;
         }
 
-        if (bld == null)
-        {
-            bld = Instantiate(chosenPrefab, transform);
-            // Apply original rotations and scales based on prefab type
-            if (chosenPrefab.name.Contains("Building 1"))
-            {
-                bld.transform.rotation = Quaternion.Euler(270f, 0f, 0f);
-                bld.transform.localScale = new Vector3(3500f, 3500f, 3500f);
-            }
-            else if (chosenPrefab.name.Contains("Building 2"))
-            {
-                bld.transform.rotation = Quaternion.Euler(270f, 0f, 0f);
-                bld.transform.localScale = new Vector3(2500f, 2500f, 2500f);
-            }
-            else if (chosenPrefab.name.Contains("Building 4"))
-            {
-                bld.transform.rotation = Quaternion.Euler(270f, 90f, 0f);
-                bld.transform.localScale = new Vector3(6000f, 6000f, 6000f);
-            }
-        }
-
-        // Set building position. Height Y = 0.
-        bld.transform.position = new Vector3(targetX, 0f, refZ);
-        if (chosenPrefab.name.Contains("Building 2"))
-        {
-            bld.transform.position = new Vector3(targetX, 8f, refZ);
-        }
-        activeBuildings.Add(bld);
-
-        // Approximate length of buildings to offset the next spawn Z
-        float buildingLength = 20f; // Default spacing
-        if (chosenPrefab.name.Contains("Building 1")) buildingLength = 15f;
-        else if (chosenPrefab.name.Contains("Building 2")) buildingLength = 20f;
-        else if (chosenPrefab.name.Contains("Building 4")) buildingLength = 10f;
-
-        if (isLeft) nextLeftBuildingZ += buildingLength;
-        else nextRightBuildingZ += buildingLength;
+        SpawnGroundTile(spawnZ);
     }
 
     private void SpawnRandomLaneObject()
@@ -429,6 +459,11 @@ public class RunnerGameManager : MonoBehaviour
         isGameOver = true;
         isPlaying = false;
         currentSpeed = 0f;
+
+        if (RunnerUIController.Instance != null)
+        {
+            RunnerUIController.Instance.ShowGameOver();
+        }
     }
 
     private void ClearActiveObjects()
@@ -440,12 +475,12 @@ public class RunnerGameManager : MonoBehaviour
         }
         activeGrounds.Clear();
 
-        foreach (var obj in activeBuildings)
+        foreach (var obj in activeTunnels)
         {
             obj.SetActive(false);
-            buildingPool.Add(obj);
+            tunnelPool.Add(obj);
         }
-        activeBuildings.Clear();
+        activeTunnels.Clear();
 
         foreach (var obj in activeCollectibles)
         {
@@ -460,58 +495,5 @@ public class RunnerGameManager : MonoBehaviour
             obstaclePool.Add(obj);
         }
         activeObstacles.Clear();
-    }
-
-    // Standard high-quality IMGUI HUD for 100% reliable out-of-the-box user feedback
-    private void OnGUI()
-    {
-        GUIStyle style = new GUIStyle();
-        style.fontSize = 24;
-        style.normal.textColor = Color.white;
-        style.fontStyle = FontStyle.Bold;
-
-        // 1. Score display
-        GUI.Label(new Rect(20, 20, 400, 40), $"Score: {Mathf.FloorToInt(score)}", style);
-
-        // 2. Collectibles list
-        GUIStyle colStyle = new GUIStyle(style);
-        colStyle.fontSize = 18;
-        colStyle.normal.textColor = Color.cyan;
-        GUI.Label(new Rect(20, 60, 400, 30), $"Biochips: {biochipsCollected}", colStyle);
-        
-        colStyle.normal.textColor = Color.magenta;
-        GUI.Label(new Rect(20, 90, 400, 30), $"Female Hormone Kits: {femaleHormoneCollected}", colStyle);
-        
-        colStyle.normal.textColor = Color.yellow;
-        GUI.Label(new Rect(20, 120, 400, 30), $"General Hormone Kits: {generalHormoneCollected}", colStyle);
-
-        // 3. Game Over window
-        if (isGameOver)
-        {
-            // Dim background
-            Texture2D blackTexture = new Texture2D(1, 1);
-            blackTexture.SetPixel(0, 0, new Color(0, 0, 0, 0.6f));
-            blackTexture.Apply();
-            GUI.skin.box.normal.background = blackTexture;
-            GUI.Box(new Rect(0, 0, Screen.width, Screen.height), GUIContent.none);
-
-            // Window
-            Rect windowRect = new Rect(Screen.width / 2 - 150, Screen.height / 2 - 120, 300, 240);
-            GUI.Box(windowRect, "GAME OVER", GUI.skin.box);
-
-            GUIStyle titleStyle = new GUIStyle(style);
-            titleStyle.alignment = TextAnchor.MiddleCenter;
-            GUI.Label(new Rect(windowRect.x, windowRect.y + 20, windowRect.width, 40), "GAME OVER", titleStyle);
-
-            GUIStyle resultStyle = new Rect(windowRect.x, windowRect.y + 70, windowRect.width, 30).Contains(Event.current.mousePosition) ? colStyle : colStyle;
-            resultStyle.alignment = TextAnchor.MiddleCenter;
-            GUI.Label(new Rect(windowRect.x, windowRect.y + 70, windowRect.width, 30), $"Final Score: {Mathf.FloorToInt(score)}", resultStyle);
-            GUI.Label(new Rect(windowRect.x, windowRect.y + 100, windowRect.width, 30), $"Biochips collected: {biochipsCollected}", resultStyle);
-
-            if (GUI.Button(new Rect(windowRect.x + 50, windowRect.y + 160, 200, 45), "TAP TO RESTART"))
-            {
-                StartGame();
-            }
-        }
     }
 }

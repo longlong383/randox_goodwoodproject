@@ -1,0 +1,12 @@
+{
+    "asset": "1740498663a44a24892fe5e97a44c5c3",
+    "fileName": "019ed4e5-f9f1-75bd-b88e-74659d748054.pose.json",
+    "prompt": "A humanoid character standing in a neutral idle pose, breathing slightly.",
+    "negativePrompt": "",
+    "model": "unity-text-to-motion",
+    "modelName": "Text to Motion",
+    "customSeed": 1287455365,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "isTrimmed": false
+}

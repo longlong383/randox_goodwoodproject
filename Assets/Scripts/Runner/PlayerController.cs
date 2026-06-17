@@ -14,36 +14,25 @@ public class PlayerController : MonoBehaviour
     private bool isJumping = false;
     private float jumpTimer = 0f;
 
-    [Header("Slide Settings")]
-    public float slideDuration = 0.7f;
-    private bool isSliding = false;
-    private float slideTimer = 0f;
-    private Vector3 originalScale;
-    private BoxCollider boxCollider;
-    private Vector3 originalColliderSize;
-    private Vector3 originalColliderCenter;
+    [Header("Rotation Settings")]
+    public float maxRotationAngle = 15f;
+    public float rotationSpeed = 10f;
+
+    [Header("Ground Level")]
+    public float groundY = 0.5f;
 
     [Header("Input System Actions")]
     private InputAction moveAction;
     private InputAction jumpAction;
-    private InputAction crouchAction;
     private bool laneSwitchPressed = false;
-
-    private void Awake()
-    {
-        originalScale = transform.localScale;
-        boxCollider = GetComponent<BoxCollider>();
-        if (boxCollider != null)
-        {
-            originalColliderSize = boxCollider.size;
-            originalColliderCenter = boxCollider.center;
-        }
-    }
 
     private void Start()
     {
         // Tag the player to ensure other scripts detect collisions correctly
         gameObject.tag = "Player";
+
+        // Auto-detect ground Y from initial position
+        groundY = transform.position.y;
 
         // Bind new Input System actions
         var playerMap = InputSystem.actions?.FindActionMap("Player");
@@ -52,14 +41,12 @@ public class PlayerController : MonoBehaviour
             playerMap.Enable();
             moveAction = playerMap.FindAction("Move");
             jumpAction = playerMap.FindAction("Jump");
-            crouchAction = playerMap.FindAction("Crouch");
         }
         else
         {
             // Fallback: search globally if maps aren't loaded correctly
             moveAction = InputSystem.actions?.FindAction("Move");
             jumpAction = InputSystem.actions?.FindAction("Jump");
-            crouchAction = InputSystem.actions?.FindAction("Crouch");
         }
     }
 
@@ -105,27 +92,10 @@ public class PlayerController : MonoBehaviour
         // 2. Jump trigger
         if (jumpAction != null && jumpAction.WasPressedThisFrame())
         {
-            if (!isJumping && !isSliding)
+            if (!isJumping)
             {
                 isJumping = true;
                 jumpTimer = 0f;
-            }
-        }
-
-        // 3. Slide/Crouch trigger
-        if (crouchAction != null && crouchAction.WasPressedThisFrame())
-        {
-            if (!isSliding && !isJumping)
-            {
-                isSliding = true;
-                slideTimer = 0f;
-                // Visual shrink
-                transform.localScale = new Vector3(originalScale.x, originalScale.y * 0.5f, originalScale.z);
-                if (boxCollider != null)
-                {
-                    boxCollider.size = new Vector3(originalColliderSize.x, originalColliderSize.y * 0.5f, originalColliderSize.z);
-                    boxCollider.center = new Vector3(originalColliderCenter.x, originalColliderCenter.y * 0.5f, originalColliderCenter.z);
-                }
             }
         }
     }
@@ -139,7 +109,7 @@ public class PlayerController : MonoBehaviour
     {
         // Interpolate horizontal position
         float targetX = currentLane * laneWidth;
-        float currentY = 0.5f; // Ground level Y offset (half player scale height)
+        float currentY = groundY;
 
         // Interpolate Jump vertical position
         if (isJumping)
@@ -149,32 +119,11 @@ public class PlayerController : MonoBehaviour
             if (normalizedTime >= 1.0f)
             {
                 isJumping = false;
-                currentY = 0.5f;
+                currentY = groundY;
             }
             else
             {
-                currentY = 0.5f + Mathf.Sin(normalizedTime * Mathf.PI) * jumpHeight;
-            }
-        }
-
-        // Interpolate Slide/Crouch timer
-        if (isSliding)
-        {
-            slideTimer += Time.deltaTime;
-            if (slideTimer >= slideDuration)
-            {
-                isSliding = false;
-                // Restore visual and collider scales
-                transform.localScale = originalScale;
-                if (boxCollider != null)
-                {
-                    boxCollider.size = originalColliderSize;
-                    boxCollider.center = originalColliderCenter;
-                }
-            }
-            else
-            {
-                currentY = 0.25f; // Half height center
+                currentY = groundY + Mathf.Sin(normalizedTime * Mathf.PI) * jumpHeight;
             }
         }
 
@@ -182,5 +131,16 @@ public class PlayerController : MonoBehaviour
         Vector3 currentPos = transform.position;
         float newX = Mathf.MoveTowards(currentPos.x, targetX, laneSwitchSpeed * Time.deltaTime);
         transform.position = new Vector3(newX, currentY, -6f);
+
+        // Smoothly rotate body based on horizontal movement direction
+        float targetYRotation = 0f;
+        float diffX = newX - currentPos.x;
+        if (Mathf.Abs(diffX) > 0.001f)
+        {
+            targetYRotation = Mathf.Sign(diffX) * maxRotationAngle;
+        }
+
+        Quaternion targetRotation = Quaternion.Euler(0f, targetYRotation, 0f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
     }
 }
