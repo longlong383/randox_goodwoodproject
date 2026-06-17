@@ -603,7 +603,14 @@ Animator:
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
-  m_WarningMessage: 
+  m_WarningMessage: "\nBinding warning: Some generic clip(s) animate transforms that
+    are already bound by a Humanoid avatar. These transforms can only be changed
+    by Humanoid clips.\n\tTransform 'mixamorig:Hips'\n\tTransform 'mixamorig:LeftFoot'\n\tTransform
+    'mixamorig:LeftHandThumb2'\n\tTransform 'mixamorig:LeftHandIndex1'\n\tTransform
+    'mixamorig:LeftHandPinky2'\n\tTransform 'mixamorig:RightHandRing2'\n\tTransform
+    'mixamorig:Spine1'\n\tTransform 'mixamorig:LeftToeBase'\n\tTransform 'mixamorig:LeftHandThumb3'\n\tTransform
+    'mixamorig:RightArm'\n\tand more ...\n\tFrom animation clip 'mixamo.com'\n\tFrom
+    animation clip 'mixamo.com'"
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -638,10 +645,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RunnerGameManager
   groundPrefab: {fileID: 1581068488036923363, guid: d6a896285f61e504087d80040acd5ab7, type: 3}
-  buildingPrefabs:
-  - {fileID: 6604109557264960180, guid: 9355ff0cc7f4e4447a386d4786e63dbf, type: 3}
-  - {fileID: 2242962199407936840, guid: db83af72a7cf0cf4e8520955191b6735, type: 3}
-  - {fileID: 3186704921531866582, guid: 23588033217dbf74797bb4397b616193, type: 3}
   collectiblePrefabs:
   - {fileID: 3463325735670797326, guid: 5a825da6e68d964488161de1c705bab5, type: 3}
   - {fileID: 1473864732527478894, guid: f934a07392dc31246bfa85a7dbf4e55b, type: 3}
@@ -654,10 +657,8 @@ MonoBehaviour:
   laneWidth: 2
   spawnDistanceZ: 50
   groundTileLength: 4.72
-  initialGroundTiles: 15
-  leftBuildingX: -9.5
-  rightBuildingX: 9.5
-  buildingSpawnDistanceZ: 5
+  initialGroundTiles: 50
+  groundSpawnInterval: 3
   spawnInterval: 0.5
   isPlaying: 0
   isGameOver: 0
