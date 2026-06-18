@@ -1,0 +1,142 @@
+{
+    "version": 1,
+    "name": "RunnerUIActions",
+    "maps": [
+        {
+            "name": "UI",
+            "id": "2d30e29c-f8af-4793-9581-a19d935174dc",
+            "actions": [
+                {
+                    "name": "Start",
+                    "type": "Button",
+                    "id": "ce198095-edc5-4467-8c37-0898de7dfa64",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "ece51081-b59f-4f95-93c8-b0b1c1374285",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Start",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Gameplay",
+            "id": "926bf64f-247f-451c-90c8-7315bc772c9e",
+            "actions": [
+                {
+                    "name": "New action",
+                    "type": "Button",
+                    "id": "75107cef-a735-4816-8145-420341084e1f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "MoveHorizontal",
+                    "type": "Value",
+                    "id": "16dc112e-7391-4369-8c41-6db52ecc5aed",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Jump",
+                    "type": "Button",
+                    "id": "0bd817b4-c206-4834-94a4-ad54e281239b",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "23faa04e-67b7-493a-b46b-39152d7f32cd",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ddf49362-173c-4449-88ce-544bb7798821",
+                    "path": "<Keyboard>/leftArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MoveHorizontal",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "cbf21a79-b58c-4806-b89f-7532779d58fb",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MoveHorizontal",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7a5a3eca-68e7-4dfe-ba5b-387ae63a1223",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Jump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "New action map",
+            "id": "f8f7e113-2701-462e-8ec3-4a851d2f3a28",
+            "actions": [
+                {
+                    "name": "New action",
+                    "type": "Button",
+                    "id": "07d0405f-24c5-4785-b1f3-44030902e2b9",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "24ba1a07-df0f-4708-9c06-05604813f612",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.InputSystem;
 
 public class RunnerUIController : MonoBehaviour
 {
@@ -20,45 +21,64 @@ public class RunnerUIController : MonoBehaviour
     [Header("Speed Dial Elements")]
     public Image speedDialFillImage;
     public TextMeshProUGUI speedDialValueText;
-    public float targetScoreMax = 10000f; // Score at which speed dial is at 100%
+    public float targetScoreMax = 10000f;
 
     [Header("Game Over Panel Elements")]
     public TextMeshProUGUI finalScoreText;
     public TextMeshProUGUI finalBiochipsText;
     public Button restartButton;
 
+    // Input System
+    private RunnerUIActions inputActions;
+
     private void Awake()
     {
         if (Instance == null)
-        {
             Instance = this;
-        }
         else
         {
             Destroy(gameObject);
+            return;
         }
+
+        inputActions = new RunnerUIActions();
+    }
+
+    private void OnEnable()
+    {
+        // Enable both action maps
+        inputActions.UI.Enable();
+        // inputActions.Gameplay.Enable();
+
+        // Subscribe to Start action (spacebar on start/gameover screens)
+        inputActions.UI.Start.performed += OnStartPressed;
+    }
+
+    private void OnDisable()
+    {
+        inputActions.UI.Start.performed -= OnStartPressed;
+        inputActions.UI.Disable();
+        inputActions.Gameplay.Disable();
     }
 
     private void Start()
     {
         if (restartButton != null)
         {
+            Debug.Log("restarting button adding");
             restartButton.onClick.AddListener(OnRestartButtonClicked);
+            Debug.Log("restarting button added");
         }
-
-        // Make start panel click-to-start
         if (startPanel != null)
         {
             Button startBtn = startPanel.GetComponent<Button>();
             if (startBtn == null)
-            {
                 startBtn = startPanel.AddComponent<Button>();
-            }
             startBtn.onClick.AddListener(OnStartButtonClicked);
         }
 
-        // Initialize state
-        UpdateUIState();
+        SetAllPanelsOff();
+        if (startPanel != null) startPanel.SetActive(true);
     }
 
     private void Update()
@@ -68,42 +88,52 @@ public class RunnerUIController : MonoBehaviour
         UpdateUIState();
 
         if (RunnerGameManager.Instance.isPlaying && !RunnerGameManager.Instance.isGameOver)
-        {
             UpdateGameplayHUD();
-        }
     }
 
-    private void UpdateUIState()
+    // Called by the Input System when Space is pressed
+    private void OnStartPressed(InputAction.CallbackContext context)
     {
         if (RunnerGameManager.Instance == null) return;
 
         bool isPlaying = RunnerGameManager.Instance.isPlaying;
         bool isGameOver = RunnerGameManager.Instance.isGameOver;
 
-        // Show start panel if we haven't started playing yet
-        if (startPanel != null)
+        // Space works on the start screen AND the game over screen
+        if (!isPlaying || isGameOver)
         {
-            startPanel.SetActive(!isPlaying && !isGameOver);
+            RunnerGameManager.Instance.StartGame();
+        }
+    }
+
+    private void SetAllPanelsOff()
+    {
+        if (startPanel != null) startPanel.SetActive(false);
+        if (gameplayHUD != null) gameplayHUD.SetActive(false);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+    }
+
+    private void UpdateUIState()
+    {
+        if (RunnerGameManager.Instance == null)
+        {
+            SetAllPanelsOff();
+            if (startPanel != null) startPanel.SetActive(true);
+            return;
         }
 
-        // Show HUD only during active play
-        if (gameplayHUD != null)
-        {
-            gameplayHUD.SetActive(isPlaying && !isGameOver);
-        }
+        bool isPlaying = RunnerGameManager.Instance.isPlaying;
+        bool isGameOver = RunnerGameManager.Instance.isGameOver;
 
-        // Show game over panel when dead
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(isGameOver);
-        }
+        if (startPanel != null) startPanel.SetActive(!isPlaying && !isGameOver);
+        if (gameplayHUD != null) gameplayHUD.SetActive(isPlaying && !isGameOver);
+        if (gameOverPanel != null) gameOverPanel.SetActive(isGameOver);
     }
 
     private void UpdateGameplayHUD()
     {
         var manager = RunnerGameManager.Instance;
 
-        // 1. Text Readouts
         if (scoreText != null)
             scoreText.text = $"SCORE: {Mathf.FloorToInt(manager.score)}";
 
@@ -116,23 +146,18 @@ public class RunnerUIController : MonoBehaviour
         if (generalHormoneText != null)
             generalHormoneText.text = $"{manager.generalHormoneCollected}";
 
-        // 2. Dynamic Speed Dial Gauge
-        // Fill amount increases as score goes up, wrapping/looping or clamping
         float scoreFraction = manager.score / targetScoreMax;
         float fillAmount = Mathf.Clamp01(scoreFraction);
 
         if (speedDialFillImage != null)
         {
             speedDialFillImage.fillAmount = fillAmount;
-            
-            // Dynamic color shift (Neon Cyan to Hot Red as speed/score maxes out)
             speedDialFillImage.color = Color.Lerp(Color.cyan, Color.red, fillAmount);
         }
 
         if (speedDialValueText != null)
         {
-            // Speed indicator in MPH or standard Speed units
-            float virtualSpeed = manager.currentSpeed * 10f; // e.g. 120 to 300
+            float virtualSpeed = manager.currentSpeed * 10f;
             speedDialValueText.text = $"{Mathf.FloorToInt(virtualSpeed)} km/h";
         }
     }
@@ -151,17 +176,12 @@ public class RunnerUIController : MonoBehaviour
 
     private void OnRestartButtonClicked()
     {
-        if (RunnerGameManager.Instance != null)
-        {
-            RunnerGameManager.Instance.StartGame();
-        }
+        Debug.Log("handled!");
+        RunnerGameManager.Instance?.StartGame();
     }
 
     private void OnStartButtonClicked()
     {
-        if (RunnerGameManager.Instance != null)
-        {
-            RunnerGameManager.Instance.StartGame();
-        }
+        RunnerGameManager.Instance?.StartGame();
     }
 }
