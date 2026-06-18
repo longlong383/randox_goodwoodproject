@@ -79,7 +79,7 @@ public class RunnerGameManager : MonoBehaviour
 
     private void Start()
     {
-        StartGame();
+        //StartGame();
     }
 
     public void StartGame()
@@ -388,7 +388,7 @@ public class RunnerGameManager : MonoBehaviour
         if (coll == null)
         {
             coll = Instantiate(chosenPrefab, transform);
-            
+
             // Apply correct prefab properties
             if (chosenPrefab.name.Contains("Biochip"))
             {
