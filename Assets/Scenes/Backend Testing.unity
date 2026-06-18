@@ -1822,6 +1822,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1378913c15675cf47abde43e8cada535, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerGenderController
+  femalePlayer: {fileID: 0}
+  malePlayer: {fileID: 0}
 --- !u!1 &689854909
 GameObject:
   m_ObjectHideFlags: 0
