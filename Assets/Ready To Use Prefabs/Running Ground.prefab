@@ -67,7 +67,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 09bc289458721564780de4205c88777f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 30c10a680abed594a9de859a7cb65c1e, type: 2}
+      objectReference: {fileID: 2100000, guid: 415bb20fe9586e34ba4035f5ae0a6039, type: 2}
     - target: {fileID: 919132149155446097, guid: 09bc289458721564780de4205c88777f, type: 3}
       propertyPath: m_Name
       value: Running Ground

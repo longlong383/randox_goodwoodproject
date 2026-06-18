@@ -74,11 +74,11 @@ public class PlayerController : MonoBehaviour
                 {
                     if (moveX < -0.4f)
                     {
-                        SwitchLane(-1);
+                        MoveLeft();
                     }
                     else if (moveX > 0.4f)
                     {
-                        SwitchLane(1);
+                        MoveRight();
                     }
                     laneSwitchPressed = true;
                 }
@@ -92,12 +92,51 @@ public class PlayerController : MonoBehaviour
         // 2. Jump trigger
         if (jumpAction != null && jumpAction.WasPressedThisFrame())
         {
-            if (!isJumping)
-            {
-                isJumping = true;
-                jumpTimer = 0f;
-            }
+            Jump();
         }
+    }
+
+    // -------------------------------------------------------------------
+    // Public API
+    // These methods expose the same actions the Input System triggers, so
+    // UI buttons, touch controls, or other scripts can drive the player.
+    // They respect the game state guard, just like the Input System path.
+    // -------------------------------------------------------------------
+
+    /// <summary>Move the player one lane to the left.</summary>
+    public void MoveLeft()
+    {
+        if (!CanControl()) return;
+        SwitchLane(-1);
+    }
+
+    /// <summary>Move the player one lane to the right.</summary>
+    public void MoveRight()
+    {
+        if (!CanControl()) return;
+        SwitchLane(1);
+    }
+
+    /// <summary>Trigger a jump if the player is grounded.</summary>
+    public void Jump()
+    {
+        if (!CanControl()) return;
+        if (!isJumping)
+        {
+            isJumping = true;
+            jumpTimer = 0f;
+        }
+    }
+
+    /// <summary>True when the player is allowed to respond to controls.</summary>
+    private bool CanControl()
+    {
+        if (RunnerGameManager.Instance != null &&
+            (!RunnerGameManager.Instance.isPlaying || RunnerGameManager.Instance.isGameOver))
+        {
+            return false;
+        }
+        return true;
     }
 
     private void SwitchLane(int direction)
