@@ -37,6 +37,9 @@ public class RunnerGameManager : MonoBehaviour
 
     [Header("Obstacle & Collectible Spawning")]
     public float spawnInterval = 1.0f;
+    [Tooltip("Chance (0 to 1) for a spawned object to float 1 meter above its base height.")]
+    [Range(0f, 1f)]
+    public float floatAboveChance = 0.5f;
     private float spawnTimer;
 
     [Header("Game State")]
@@ -65,6 +68,7 @@ public class RunnerGameManager : MonoBehaviour
     private float groundDistanceAccumulator;
     private float tunnelDistanceAccumulator;
 
+
     private void Awake()
     {
         if (Instance == null)
@@ -86,7 +90,6 @@ public class RunnerGameManager : MonoBehaviour
     {
         // Clean up any existing active objects from previous run
         ClearActiveObjects();
-
         currentSpeed = initialSpeed;
         score = 0f;
         biochipsCollected = 0;
@@ -361,7 +364,12 @@ public class RunnerGameManager : MonoBehaviour
         }
 
         // Virus Y placement should sit at obstacle height
-        obs.transform.position = new Vector3(xPos, 0.8f, spawnDistanceZ);
+        float targetY = 0.8f;
+        if (Random.value < floatAboveChance)
+        {
+            targetY += 2.0f;
+        }
+        obs.transform.position = new Vector3(xPos, targetY, spawnDistanceZ);
         activeObstacles.Add(obs);
     }
 
@@ -420,6 +428,10 @@ public class RunnerGameManager : MonoBehaviour
 
         // Place collectible slightly floating
         float spawnY = chosenPrefab.name.Contains("Biochip") ? 0.6f : 0.4f;
+        if (Random.value < floatAboveChance)
+        {
+            spawnY += 2.0f;
+        }
         coll.transform.position = new Vector3(xPos, spawnY, spawnDistanceZ);
         activeCollectibles.Add(coll);
     }
