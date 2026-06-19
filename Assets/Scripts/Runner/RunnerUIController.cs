@@ -27,7 +27,6 @@ public class RunnerUIController : MonoBehaviour
     public TextMeshProUGUI finalScoreText;
     public TextMeshProUGUI finalBiochipsText;
     public Button restartButton;
-
     // Input System
     private RunnerUIActions inputActions;
 

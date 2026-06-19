@@ -4,7 +4,11 @@ using UnityEngine;
 public class RunnerGameManager : MonoBehaviour
 {
     public static RunnerGameManager Instance { get; private set; }
-
+    public HealthMeterController healthMeterController;
+    private const float HEALTH_BEGINNING_VALUE = 4f;
+    private float healthScore = HEALTH_BEGINNING_VALUE;
+    private float minHealthScore = 0f;
+    private float maxHealthScore = 4f;
     [Header("Prefabs")]
     [Tooltip("The Running Ground prefab")]
     public GameObject groundPrefab;
@@ -103,7 +107,7 @@ public class RunnerGameManager : MonoBehaviour
         spawnTimer = 0f;
         groundDistanceAccumulator = 0f;
         tunnelDistanceAccumulator = 0f;
-
+        healthScore = HEALTH_BEGINNING_VALUE; // Reset health score to starting value
         // Initialize Spawning Z heights
         nextGroundZ = -12f; // Start ground tiles slightly behind the camera/player
 
@@ -113,6 +117,11 @@ public class RunnerGameManager : MonoBehaviour
         {
             SpawnGroundTile(groundZ);
             groundZ += groundTileLength;
+        }
+        if (healthMeterController != null)
+        {
+            Debug.Log("made ith ere");
+            healthMeterController.SetValue(HEALTH_BEGINNING_VALUE);
         }
 
         // Initial tunnel generation: lay tunnel tiles starting from behind the player
@@ -466,6 +475,8 @@ public class RunnerGameManager : MonoBehaviour
 
         if (name.Contains("Biochip"))
         {
+            healthScore = Mathf.Clamp(healthScore + 1f, minHealthScore, maxHealthScore);
+
             biochipsCollected++;
             score += 100f;
         }
@@ -487,15 +498,20 @@ public class RunnerGameManager : MonoBehaviour
             collectible.gameObject.SetActive(false);
             collectiblePool.Add(collectible.gameObject);
         }
+        healthMeterController.SetValue(healthScore);
     }
 
     public void OnObstacleHit()
     {
         // Trigger Game Over
-        isGameOver = true;
-        isPlaying = false;
-        currentSpeed = 0f;
-
+        healthScore = Mathf.Clamp(healthScore - 1f, minHealthScore, maxHealthScore);
+        healthMeterController.SetValue(healthScore);
+        if (healthScore <= 0f)
+        {
+            isGameOver = true;
+            isPlaying = false;
+            currentSpeed = 0f;
+        }
         if (RunnerUIController.Instance != null)
         {
             RunnerUIController.Instance.ShowGameOver();
