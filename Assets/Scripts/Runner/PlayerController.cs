@@ -14,12 +14,25 @@ public class PlayerController : MonoBehaviour
     private bool isJumping = false;
     private float jumpTimer = 0f;
 
+    [Header("Slide Settings")]
+    public float slideDuration = 1.0f;
+    public float slideHeightMultiplier = 0.5f;
+    private bool isSliding = false;
+    private float slideTimer = 0f;
+    private CapsuleCollider capsuleCollider;
+    private float originalColliderHeight;
+    private Vector3 originalColliderCenter;
+
     [Header("Rotation Settings")]
     public float maxRotationAngle = 15f;
     public float rotationSpeed = 10f;
 
     [Header("Ground Level")]
     public float groundY = 0.5f;
+
+    [Header("Animation")]
+    [Tooltip("Animator with the Animator Controller. Leave empty to auto-find on this object or its children.")]
+    [SerializeField] private Animator animator;
 
     [Header("Input System Actions")]
     private InputAction moveAction;
@@ -31,8 +44,26 @@ public class PlayerController : MonoBehaviour
         // Tag the player to ensure other scripts detect collisions correctly
         gameObject.tag = "Player";
 
+        // Cache the Animator if not assigned in the Inspector
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = GetComponentInChildren<Animator>();
+            }
+        }
+
         // Auto-detect ground Y from initial position
         groundY = transform.position.y;
+
+        // Cache the CapsuleCollider
+        capsuleCollider = GetComponent<CapsuleCollider>();
+        if (capsuleCollider != null)
+        {
+            originalColliderHeight = capsuleCollider.height;
+            originalColliderCenter = capsuleCollider.center;
+        }
 
         // Bind new Input System actions
         var playerMap = InputSystem.actions?.FindActionMap("Player");
@@ -60,6 +91,7 @@ public class PlayerController : MonoBehaviour
 
         HandleInput();
         HandleMovement();
+        HandleSliding();
     }
 
     private void HandleInput()
@@ -94,6 +126,34 @@ public class PlayerController : MonoBehaviour
         {
             Jump();
         }
+
+        // 3. Slide trigger (C key)
+        if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
+        {
+            Slide();
+        }
+    }
+
+    private void HandleSliding()
+    {
+        if (isSliding)
+        {
+            slideTimer -= Time.deltaTime;
+            if (slideTimer <= 0f)
+            {
+                StopSliding();
+            }
+        }
+    }
+
+    private void StopSliding()
+    {
+        isSliding = false;
+        if (capsuleCollider != null)
+        {
+            capsuleCollider.height = originalColliderHeight;
+            capsuleCollider.center = originalColliderCenter;
+        }
     }
 
     // -------------------------------------------------------------------
@@ -123,9 +183,65 @@ public class PlayerController : MonoBehaviour
         if (!CanControl()) return;
         if (!isJumping)
         {
+            if (isSliding)
+            {
+                StopSliding();
+            }
             isJumping = true;
             jumpTimer = 0f;
         }
+    }
+
+    /// <summary>Fire the "sliding" trigger on the Animator attached to this GameObject.
+    /// Called when the C key is pressed, and exposed for UI buttons, touch controls,
+    /// or other scripts.</summary>
+    public void Slide()
+    {
+        if (!CanControl()) return;
+
+        // If jumping, cancel jump and slide (runner dive mechanic)
+        if (isJumping)
+        {
+            isJumping = false;
+        }
+
+        if (isSliding)
+        {
+            slideTimer = slideDuration; // Reset timer if already sliding
+            return;
+        }
+
+        isSliding = true;
+        slideTimer = slideDuration;
+
+        if (capsuleCollider != null)
+        {
+            capsuleCollider.height = originalColliderHeight * slideHeightMultiplier;
+            capsuleCollider.center = new Vector3(
+                originalColliderCenter.x,
+                originalColliderCenter.y - (originalColliderHeight - capsuleCollider.height) / 2f,
+                originalColliderCenter.z
+            );
+        }
+
+        FireTrigger("Sliding");
+    }
+
+    /// <summary>Fire the default trigger (set via the Inspector) on the Animator Controller.</summary>
+    /// <summary>Fire a specific trigger by name on the Animator Controller.</summary>
+    public void FireTrigger(string trigger)
+    {
+        if (animator == null)
+        {
+            Debug.LogWarning("PlayerController: no Animator assigned or found.");
+            return;
+        }
+        if (string.IsNullOrEmpty(trigger))
+        {
+            Debug.LogWarning("PlayerController: trigger name is empty.");
+            return;
+        }
+        animator.SetTrigger(trigger);
     }
 
     /// <summary>True when the player is allowed to respond to controls.</summary>
@@ -143,7 +259,7 @@ public class PlayerController : MonoBehaviour
     {
         currentLane = Mathf.Clamp(currentLane + direction, -1, 1);
     }
-
+    
     private void HandleMovement()
     {
         // Interpolate horizontal position

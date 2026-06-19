@@ -37,6 +37,12 @@ public class RunnerGameManager : MonoBehaviour
 
     [Header("Obstacle & Collectible Spawning")]
     public float spawnInterval = 1.0f;
+    [Tooltip("Chance (0 to 1) for a spawned object to float 1 meter above its base height.")]
+    [Range(0f, 1f)]
+    public float floatAboveChance = 0.5f;
+    [Tooltip("Relative chance (0 to 1) of keeping a Biochip when selected. Lower values decrease spawn frequency.")]
+    [Range(0f, 1f)]
+    public float biochipSpawnChance = 0.4f;
     private float spawnTimer;
 
     [Header("Game State")]
@@ -65,6 +71,7 @@ public class RunnerGameManager : MonoBehaviour
     private float groundDistanceAccumulator;
     private float tunnelDistanceAccumulator;
 
+
     private void Awake()
     {
         if (Instance == null)
@@ -86,7 +93,6 @@ public class RunnerGameManager : MonoBehaviour
     {
         // Clean up any existing active objects from previous run
         ClearActiveObjects();
-
         currentSpeed = initialSpeed;
         score = 0f;
         biochipsCollected = 0;
@@ -361,7 +367,12 @@ public class RunnerGameManager : MonoBehaviour
         }
 
         // Virus Y placement should sit at obstacle height
-        obs.transform.position = new Vector3(xPos, 0.8f, spawnDistanceZ);
+        float targetY = 0.8f;
+        if (Random.value < floatAboveChance)
+        {
+            targetY += 1.0f;
+        }
+        obs.transform.position = new Vector3(xPos, targetY, spawnDistanceZ);
         activeObstacles.Add(obs);
     }
 
@@ -372,6 +383,27 @@ public class RunnerGameManager : MonoBehaviour
         GameObject coll = null;
         int index = Random.Range(0, collectiblePrefabs.Length);
         GameObject chosenPrefab = collectiblePrefabs[index];
+
+        // Decrease spawning frequency of the Biochip prefab
+        if (chosenPrefab != null && chosenPrefab.name.Contains("Biochip"))
+        {
+            if (Random.value > biochipSpawnChance)
+            {
+                List<GameObject> alternatives = new List<GameObject>();
+                foreach (var prefab in collectiblePrefabs)
+                {
+                    if (prefab != null && !prefab.name.Contains("Biochip"))
+                    {
+                        alternatives.Add(prefab);
+                    }
+                }
+
+                if (alternatives.Count > 0)
+                {
+                    chosenPrefab = alternatives[Random.Range(0, alternatives.Count)];
+                }
+            }
+        }
 
         // Retrieve from pool of same prefab name
         for (int i = 0; i < collectiblePool.Count; i++)
@@ -420,6 +452,10 @@ public class RunnerGameManager : MonoBehaviour
 
         // Place collectible slightly floating
         float spawnY = chosenPrefab.name.Contains("Biochip") ? 0.6f : 0.4f;
+        if (Random.value < floatAboveChance)
+        {
+            spawnY += 2.0f;
+        }
         coll.transform.position = new Vector3(xPos, spawnY, spawnDistanceZ);
         activeCollectibles.Add(coll);
     }
