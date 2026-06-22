@@ -67,7 +67,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: df470ce9ed2675547921ef064de876cf, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: e5762a78568571749a93eb7c9e57c84f, type: 2}
+      objectReference: {fileID: 2100000, guid: ace96d236944d304285da5618bce6fdd, type: 2}
     - target: {fileID: 919132149155446097, guid: df470ce9ed2675547921ef064de876cf, type: 3}
       propertyPath: m_Name
       value: Virus
