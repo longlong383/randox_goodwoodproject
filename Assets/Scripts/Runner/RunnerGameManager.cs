@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+using System.Collections;
 
 public class RunnerGameManager : MonoBehaviour
 {
@@ -56,7 +58,10 @@ public class RunnerGameManager : MonoBehaviour
     public int biochipsCollected = 0;
     public int femaleHormoneCollected = 0;
     public int generalHormoneCollected = 0;
-
+    public TextMeshProUGUI timerText;
+    private float timeRemaining;
+    private bool timerRunning = false;
+    private float gameStartTime = 15f;
     // Object Pooling lists
     private List<GameObject> groundPool = new List<GameObject>();
     private List<GameObject> tunnelPool = new List<GameObject>();
@@ -134,6 +139,7 @@ public class RunnerGameManager : MonoBehaviour
                 tunnelZ += tunnelTileLength;
             }
         }
+        StartTimer();
     }
 
     private void Update()
@@ -547,5 +553,51 @@ public class RunnerGameManager : MonoBehaviour
             obstaclePool.Add(obj);
         }
         activeObstacles.Clear();
+    }
+    public void StartTimer()
+    {
+        timeRemaining = gameStartTime; // Reset timer to 15 seconds at the start of the game
+        timerRunning = true;
+        StartCoroutine(UpdateTimerDisplay());
+    }
+
+    private IEnumerator UpdateTimerDisplay()
+    {
+        while (timerRunning)
+        {
+            UpdateDisplay();
+
+            yield return new WaitForSeconds(1f);
+
+            timeRemaining -= 1f;
+            Debug.Log("Time remaining: " + timeRemaining);
+            if (timeRemaining <= 0f)
+            {
+                timeRemaining = 0f;
+                UpdateDisplay();
+                timerRunning = false;
+                OnTimerEnd();
+            }
+        }
+    }
+
+    private void UpdateDisplay()
+    {
+        timerText.text = "Time Left: " + Mathf.CeilToInt(timeRemaining).ToString();
+    }
+
+    private void OnTimerEnd()
+    {
+        Debug.Log("Time's up!");
+        isGameOver = true;
+        isPlaying = false;
+        currentSpeed = 0f;
+
+        if (RunnerUIController.Instance != null)
+        {
+            RunnerUIController.Instance.ShowGameOver();
+        }
+
+        // Add your game-over logic here
     }
 }

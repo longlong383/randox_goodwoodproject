@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 public class RunnerUIController : MonoBehaviour
 {
@@ -17,7 +18,6 @@ public class RunnerUIController : MonoBehaviour
     public TextMeshProUGUI biochipsText;
     public TextMeshProUGUI femaleHormoneText;
     public TextMeshProUGUI generalHormoneText;
-
     [Header("Speed Dial Elements")]
     public Image speedDialFillImage;
     public TextMeshProUGUI speedDialValueText;
@@ -145,6 +145,8 @@ public class RunnerUIController : MonoBehaviour
         if (generalHormoneText != null)
             generalHormoneText.text = $"{manager.generalHormoneCollected}";
 
+
+
         float scoreFraction = manager.score / targetScoreMax;
         float fillAmount = Mathf.Clamp01(scoreFraction);
 
@@ -183,4 +185,6 @@ public class RunnerUIController : MonoBehaviour
     {
         RunnerGameManager.Instance?.StartGame();
     }
+
 }
+
