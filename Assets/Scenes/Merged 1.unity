@@ -3570,7 +3570,7 @@ MonoBehaviour:
   obstaclePrefab: {fileID: 8096545021778847391, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
   initialSpeed: 12
   speedIncreaseRate: 0.1
-  maxSpeed: 30
+  maxSpeed: 12
   currentSpeed: 0
   laneWidth: 2
   spawnDistanceZ: 50
