@@ -19,6 +19,7 @@ public class HealthMeterController : MonoBehaviour
 
     [Header("Needle")]
     [SerializeField] private GameObject needle;
+    [SerializeField] private GameObject heart;
     [Tooltip("Local Z angle of the needle at value 0 (points to the red / meter1 side).")]
     [SerializeField] private float minAngle = 0f;
     [Tooltip("Local Z angle of the needle at max value (points to the green / meter10 side).")]
@@ -50,6 +51,7 @@ public class HealthMeterController : MonoBehaviour
             }
         }
 
+
         if (needle == null)
         {
             GameObject n = GameObject.Find("needle");
@@ -59,6 +61,15 @@ public class HealthMeterController : MonoBehaviour
         Debug.Log("needle status: " + needle);
         // Initialise the display to the starting value.
         SetValue(currentValue);
+        for (int i = 0; i < meters.Length; i++)
+        {
+            if (meters[i] != null)
+                meters[i].SetActive(false);
+        }
+        if (needle != null)
+            needle.SetActive(false);
+        if (heart != null)
+            heart.SetActive(false);
     }
 
     /// <summary>
@@ -95,7 +106,33 @@ public class HealthMeterController : MonoBehaviour
                 meters[i].SetActive(i < litCount);
         }
     }
+    public void Activate()
+    {
+        for (int i = 0; i < meters.Length; i++)
+        {
+            if (meters[i] != null)
+                meters[i].SetActive(true);
+        }
+        if (needle != null)
+            needle.SetActive(true);
 
+        if (heart != null)
+            heart.SetActive(true);
+
+    }
+    public void Deactivate()
+    {
+        for (int i = 0; i < meters.Length; i++)
+        {
+            if (meters[i] != null)
+                meters[i].SetActive(false);
+        }
+        if (needle != null)
+            needle.SetActive(false);
+
+        if (heart != null)
+            heart.SetActive(false);
+    }
     /// <summary>Map the current fill fraction onto the needle's angle range.</summary>
     private void UpdateNeedleTarget()
     {
