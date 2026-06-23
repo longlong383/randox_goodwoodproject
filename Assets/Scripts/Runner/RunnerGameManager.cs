@@ -281,6 +281,9 @@ public class RunnerGameManager : MonoBehaviour
             }
         }
 
+        // Pre-spawn some initial collectibles/obstacles closer to the player so they appear sooner
+        PreSpawnInitialObjects();
+
         // Reset the active child player to starting/idle position
         GameObject playerObj = GameObject.Find("Player");
         if (playerObj != null)
@@ -308,6 +311,16 @@ public class RunnerGameManager : MonoBehaviour
             StopCoroutine(countdownCoroutine);
         }
         countdownCoroutine = StartCoroutine(CountdownCoroutine());
+    }
+
+    private void PreSpawnInitialObjects()
+    {
+        // Pre-spawn initial collectibles/obstacles at 15m, 30m, and 45m ahead of player
+        float[] initialZs = { 15f, 30f, 45f };
+        foreach (float z in initialZs)
+        {
+            SpawnRandomLaneObject(z);
+        }
     }
 
     private IEnumerator CountdownCoroutine()
@@ -606,7 +619,7 @@ public class RunnerGameManager : MonoBehaviour
         SpawnGroundTile(spawnZ);
     }
 
-    private void SpawnRandomLaneObject()
+    private void SpawnRandomLaneObject(float zPos = -1f)
     {
         // Select a random lane (-1 for Left, 0 for Center, 1 for Right)
         int laneIndex = Random.Range(-1, 2);
@@ -615,15 +628,15 @@ public class RunnerGameManager : MonoBehaviour
         // Choose whether to spawn obstacle or collectible (e.g. 40% obstacle, 60% collectible)
         if (Random.value < 0.4f)
         {
-            SpawnObstacle(targetX);
+            SpawnObstacle(targetX, zPos);
         }
         else
         {
-            SpawnCollectible(targetX);
+            SpawnCollectible(targetX, zPos);
         }
     }
 
-    private void SpawnObstacle(float xPos)
+    private void SpawnObstacle(float xPos, float zPos = -1f)
     {
         if (obstaclePrefab == null) return;
 
@@ -659,11 +672,12 @@ public class RunnerGameManager : MonoBehaviour
         {
             targetY += 1.0f;
         }
-        obs.transform.position = new Vector3(xPos, targetY, spawnDistanceZ);
+        float finalZ = zPos < 0f ? spawnDistanceZ : zPos;
+        obs.transform.position = new Vector3(xPos, targetY, finalZ);
         activeObstacles.Add(obs);
     }
 
-    private void SpawnCollectible(float xPos)
+    private void SpawnCollectible(float xPos, float zPos = -1f)
     {
         if (collectiblePrefabs == null || collectiblePrefabs.Length == 0) return;
 
@@ -743,7 +757,8 @@ public class RunnerGameManager : MonoBehaviour
         {
             spawnY += 2.0f;
         }
-        coll.transform.position = new Vector3(xPos, spawnY, spawnDistanceZ);
+        float finalZ = zPos < 0f ? spawnDistanceZ : zPos;
+        coll.transform.position = new Vector3(xPos, spawnY, finalZ);
         activeCollectibles.Add(coll);
     }
 
