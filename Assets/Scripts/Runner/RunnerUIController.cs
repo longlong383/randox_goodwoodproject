@@ -16,8 +16,7 @@ public class RunnerUIController : MonoBehaviour
     [Header("Gameplay HUD Elements")]
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI biochipsText;
-    public TextMeshProUGUI femaleHormoneText;
-    public TextMeshProUGUI generalHormoneText;
+
     [Header("Speed Dial Elements")]
     public Image speedDialFillImage;
     public TextMeshProUGUI speedDialValueText;
@@ -75,6 +74,7 @@ public class RunnerUIController : MonoBehaviour
                 startBtn = startPanel.AddComponent<Button>();
             startBtn.onClick.AddListener(OnStartButtonClicked);
         }
+
 
         SetAllPanelsOff();
         if (startPanel != null) startPanel.SetActive(true);
@@ -139,11 +139,7 @@ public class RunnerUIController : MonoBehaviour
         if (biochipsText != null)
             biochipsText.text = $"{manager.biochipsCollected}";
 
-        if (femaleHormoneText != null)
-            femaleHormoneText.text = $"{manager.femaleHormoneCollected}";
 
-        if (generalHormoneText != null)
-            generalHormoneText.text = $"{manager.generalHormoneCollected}";
 
 
 

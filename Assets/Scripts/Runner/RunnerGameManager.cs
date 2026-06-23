@@ -126,6 +126,7 @@ public class RunnerGameManager : MonoBehaviour
         if (healthMeterController != null)
         {
             Debug.Log("made ith ere");
+            healthMeterController.Activate();
             healthMeterController.SetValue(HEALTH_BEGINNING_VALUE);
         }
 
@@ -514,13 +515,7 @@ public class RunnerGameManager : MonoBehaviour
         healthMeterController.SetValue(healthScore);
         if (healthScore <= 0f)
         {
-            isGameOver = true;
-            isPlaying = false;
-            currentSpeed = 0f;
-        }
-        if (RunnerUIController.Instance != null)
-        {
-            RunnerUIController.Instance.ShowGameOver();
+            EndGame();
         }
     }
 
@@ -589,6 +584,11 @@ public class RunnerGameManager : MonoBehaviour
     private void OnTimerEnd()
     {
         Debug.Log("Time's up!");
+        EndGame();
+        // Add your game-over logic here
+    }
+    private void EndGame()
+    {
         isGameOver = true;
         isPlaying = false;
         currentSpeed = 0f;
@@ -597,7 +597,10 @@ public class RunnerGameManager : MonoBehaviour
         {
             RunnerUIController.Instance.ShowGameOver();
         }
+        if (healthMeterController != null)
+        {
+            healthMeterController.Deactivate();
+        }
 
-        // Add your game-over logic here
     }
 }
