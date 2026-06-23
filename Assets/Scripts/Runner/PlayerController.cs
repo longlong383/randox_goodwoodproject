@@ -244,6 +244,48 @@ public class PlayerController : MonoBehaviour
         animator.SetTrigger(trigger);
     }
 
+    /// <summary>Resets the player controller's state and position to default for game start.</summary>
+    public void ResetPlayer()
+    {
+        currentLane = 0;
+        isJumping = false;
+        jumpTimer = 0f;
+        isSliding = false;
+        slideTimer = 0f;
+
+        if (capsuleCollider == null)
+        {
+            capsuleCollider = GetComponent<CapsuleCollider>();
+        }
+        if (capsuleCollider != null)
+        {
+            if (originalColliderHeight == 0f)
+            {
+                originalColliderHeight = capsuleCollider.height;
+                originalColliderCenter = capsuleCollider.center;
+            }
+            capsuleCollider.height = originalColliderHeight;
+            capsuleCollider.center = originalColliderCenter;
+        }
+
+        transform.position = new Vector3(0f, groundY, -6f);
+        transform.rotation = Quaternion.identity;
+
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = GetComponentInChildren<Animator>();
+            }
+        }
+        if (animator != null)
+        {
+            animator.Rebind();
+            animator.Update(0f);
+        }
+    }
+
     /// <summary>True when the player is allowed to respond to controls.</summary>
     private bool CanControl()
     {

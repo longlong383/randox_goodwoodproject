@@ -53,7 +53,10 @@ public class RunnerGameManager : MonoBehaviour
 
     [Header("Game State")]
     public bool isPlaying = false;
+    public bool isCountingDown = false;
     public bool isGameOver = false;
+    public TextMeshProUGUI countdownText;
+    private Coroutine countdownCoroutine;
     public float score = 0f;
     public int biochipsCollected = 0;
     public int femaleHormoneCollected = 0;
@@ -100,14 +103,29 @@ public class RunnerGameManager : MonoBehaviour
 
     public void StartGame()
     {
+        // Try to auto-find countdown text if not set
+        if (countdownText == null)
+        {
+            var canvas = GameObject.Find("HUD Canvas");
+            if (canvas != null)
+            {
+                var child = canvas.transform.Find("CountdownText");
+                if (child != null)
+                {
+                    countdownText = child.GetComponent<TextMeshProUGUI>();
+                }
+            }
+        }
+
         // Clean up any existing active objects from previous run
         ClearActiveObjects();
-        currentSpeed = initialSpeed;
+        currentSpeed = 0f; // No movement during countdown
         score = 0f;
         biochipsCollected = 0;
         femaleHormoneCollected = 0;
         generalHormoneCollected = 0;
-        isPlaying = true;
+        isPlaying = false; // Not playing until countdown ends
+        isCountingDown = true;
         isGameOver = false;
         spawnTimer = 0f;
         groundDistanceAccumulator = 0f;
@@ -140,7 +158,116 @@ public class RunnerGameManager : MonoBehaviour
                 tunnelZ += tunnelTileLength;
             }
         }
+
+        // Reset the active child player to starting/idle position
+        GameObject playerObj = GameObject.Find("Player");
+        if (playerObj != null)
+        {
+            foreach (Transform child in playerObj.transform)
+            {
+                if (child.gameObject.activeSelf)
+                {
+                    PlayerController pc = child.GetComponent<PlayerController>();
+                    if (pc != null)
+                    {
+                        pc.ResetPlayer();
+                    }
+                    break;
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Player GameObject not found in the scene.");
+        }
+
+        if (countdownCoroutine != null)
+        {
+            StopCoroutine(countdownCoroutine);
+        }
+        countdownCoroutine = StartCoroutine(CountdownCoroutine());
+    }
+
+    private IEnumerator CountdownCoroutine()
+    {
+        isCountingDown = true;
+        isPlaying = false;
+
+        string[] countdownSteps = { "3", "2", "1", "GO!" };
+
+        if (countdownText != null)
+        {
+            countdownText.gameObject.SetActive(true);
+            countdownText.color = Color.white;
+        }
+
+        foreach (string step in countdownSteps)
+        {
+            if (countdownText != null)
+            {
+                countdownText.text = step;
+
+                // Pop animation effect: scale from 1.5 to 1.0
+                float duration = 0.8f; // duration of each number
+                float elapsed = 0f;
+                while (elapsed < duration)
+                {
+                    elapsed += Time.deltaTime;
+                    float progress = elapsed / duration;
+
+                    // Simple pop: scale starts at 1.5, rapidly goes to 1.0, then stays at 1.0
+                    float scale = Mathf.Lerp(1.5f, 1.0f, Mathf.Min(1f, progress * 4f));
+                    countdownText.transform.localScale = new Vector3(scale, scale, 1f);
+
+                    yield return null;
+                }
+            }
+            else
+            {
+                yield return new WaitForSeconds(0.8f);
+            }
+        }
+
+        // Countdown complete!
+        isCountingDown = false;
+        isPlaying = true;
+        currentSpeed = initialSpeed;
+
+        // Trigger 'Start' animation on the active child player now that countdown is complete
+        GameObject activePlayerObj = GameObject.Find("Player");
+        if (activePlayerObj != null)
+        {
+            foreach (Transform child in activePlayerObj.transform)
+            {
+                if (child.gameObject.activeSelf)
+                {
+                    Animator animator = child.GetComponent<Animator>();
+                    if (animator != null)
+                    {
+                        animator.SetTrigger("Start");
+                        Debug.Log($"Triggered 'Start' on active child player {child.name} after countdown complete");
+                    }
+                    break;
+                }
+            }
+        }
+
         StartTimer();
+
+        // Keep "GO!" on screen for a short moment, then fade out
+        if (countdownText != null)
+        {
+            float elapsed = 0f;
+            while (elapsed < 0.6f)
+            {
+                elapsed += Time.deltaTime;
+                countdownText.color = new Color(1f, 1f, 1f, Mathf.Lerp(1f, 0f, elapsed / 0.6f));
+                yield return null;
+            }
+            countdownText.text = "";
+            countdownText.color = Color.white;
+            countdownText.gameObject.SetActive(false);
+        }
     }
 
     private void Update()
@@ -589,6 +716,17 @@ public class RunnerGameManager : MonoBehaviour
     }
     private void EndGame()
     {
+        if (countdownCoroutine != null)
+        {
+            StopCoroutine(countdownCoroutine);
+            countdownCoroutine = null;
+        }
+        if (countdownText != null)
+        {
+            countdownText.text = "";
+            countdownText.gameObject.SetActive(false);
+        }
+        isCountingDown = false;
         isGameOver = true;
         isPlaying = false;
         currentSpeed = 0f;

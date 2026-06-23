@@ -86,7 +86,7 @@ public class RunnerUIController : MonoBehaviour
 
         UpdateUIState();
 
-        if (RunnerGameManager.Instance.isPlaying && !RunnerGameManager.Instance.isGameOver)
+        if ((RunnerGameManager.Instance.isPlaying || RunnerGameManager.Instance.isCountingDown) && !RunnerGameManager.Instance.isGameOver)
             UpdateGameplayHUD();
     }
 
@@ -97,9 +97,10 @@ public class RunnerUIController : MonoBehaviour
 
         bool isPlaying = RunnerGameManager.Instance.isPlaying;
         bool isGameOver = RunnerGameManager.Instance.isGameOver;
+        bool isCountingDown = RunnerGameManager.Instance.isCountingDown;
 
-        // Space works on the start screen AND the game over screen
-        if (!isPlaying || isGameOver)
+        // Space works on the start screen AND the game over screen, but not during countdown
+        if ((!isPlaying && !isCountingDown) || isGameOver)
         {
             RunnerGameManager.Instance.StartGame();
         }
@@ -123,9 +124,10 @@ public class RunnerUIController : MonoBehaviour
 
         bool isPlaying = RunnerGameManager.Instance.isPlaying;
         bool isGameOver = RunnerGameManager.Instance.isGameOver;
+        bool isCountingDown = RunnerGameManager.Instance.isCountingDown;
 
-        if (startPanel != null) startPanel.SetActive(!isPlaying && !isGameOver);
-        if (gameplayHUD != null) gameplayHUD.SetActive(isPlaying && !isGameOver);
+        if (startPanel != null) startPanel.SetActive(!isPlaying && !isGameOver && !isCountingDown);
+        if (gameplayHUD != null) gameplayHUD.SetActive((isPlaying || isCountingDown) && !isGameOver);
         if (gameOverPanel != null) gameOverPanel.SetActive(isGameOver);
     }
 

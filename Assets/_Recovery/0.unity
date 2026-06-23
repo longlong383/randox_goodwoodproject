@@ -3738,7 +3738,9 @@ MonoBehaviour:
   floatAboveChance: 0.5
   biochipSpawnChance: 0.4
   isPlaying: 0
+  isCountingDown: 0
   isGameOver: 0
+  countdownText: {fileID: 0}
   score: 0
   biochipsCollected: 0
   femaleHormoneCollected: 0
