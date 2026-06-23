@@ -65,6 +65,46 @@ public class RunnerGameManager : MonoBehaviour
     private float timeRemaining;
     private bool timerRunning = false;
     private float gameStartTime = 15f;
+
+    public enum TutorialAction
+    {
+        LaneSwitch,
+        Jump,
+        Slide
+    }
+
+    [Header("Tutorial State")]
+    public bool isTutorial { get; private set; } = false;
+    public bool tutorialLaneSwitched { get; private set; } = false;
+    public bool tutorialJumped { get; private set; } = false;
+    public bool tutorialSlid { get; private set; } = false;
+    private bool hasCompletedTutorialOnce = false;
+    private bool tutorialCompleting = false;
+    private float tutorialCompleteTimer = 0f;
+
+    public void RegisterTutorialAction(TutorialAction action)
+    {
+        if (!isTutorial || isGameOver || tutorialCompleting) return;
+
+        switch (action)
+        {
+            case TutorialAction.LaneSwitch:
+                tutorialLaneSwitched = true;
+                break;
+            case TutorialAction.Jump:
+                tutorialJumped = true;
+                break;
+            case TutorialAction.Slide:
+                tutorialSlid = true;
+                break;
+        }
+
+        if (tutorialLaneSwitched && tutorialJumped && tutorialSlid)
+        {
+            tutorialCompleting = true;
+            tutorialCompleteTimer = 1.5f;
+        }
+    }
     // Object Pooling lists
     private List<GameObject> groundPool = new List<GameObject>();
     private List<GameObject> tunnelPool = new List<GameObject>();
@@ -104,6 +144,86 @@ public class RunnerGameManager : MonoBehaviour
 
     public void StartGame()
     {
+        if (!hasCompletedTutorialOnce)
+        {
+            StartTutorial();
+        }
+        else
+        {
+            StartActualGame();
+        }
+    }
+
+    public void StartTutorial()
+    {
+        isTutorial = true;
+        tutorialLaneSwitched = false;
+        tutorialJumped = false;
+        tutorialSlid = false;
+
+        playerPrefab.SetActive(true); // Activate the player prefab
+        ClearActiveObjects();
+        currentSpeed = initialSpeed; // Start moving immediately at comfortable speed
+        score = 0f;
+        biochipsCollected = 0;
+        femaleHormoneCollected = 0;
+        generalHormoneCollected = 0;
+        isPlaying = true; // Playing immediately
+        isCountingDown = false;
+        isGameOver = false;
+        spawnTimer = 0f;
+        groundDistanceAccumulator = 0f;
+        tunnelDistanceAccumulator = 0f;
+        
+        // Initial ground generation
+        nextGroundZ = -12f;
+        float groundZ = nextGroundZ;
+        for (int i = 0; i < initialGroundTiles; i++)
+        {
+            SpawnGroundTile(groundZ);
+            groundZ += groundTileLength;
+        }
+
+        // Initial tunnel generation
+        if (tunnelPrefab != null)
+        {
+            float tunnelZ = 50.4f - tunnelTileLength;
+            for (int i = 0; i < initialTunnelTiles; i++)
+            {
+                SpawnTunnelTile(tunnelZ);
+                tunnelZ += tunnelTileLength;
+            }
+        }
+
+        // Reset player
+        GameObject playerObj = GameObject.Find("Player");
+        if (playerObj != null)
+        {
+            foreach (Transform child in playerObj.transform)
+            {
+                if (child.gameObject.activeSelf)
+                {
+                    PlayerController pc = child.GetComponent<PlayerController>();
+                    if (pc != null)
+                    {
+                        pc.ResetPlayer();
+                    }
+                    
+                    // Trigger Start animation
+                    Animator animator = child.GetComponent<Animator>();
+                    if (animator != null)
+                    {
+                        animator.SetTrigger("Start");
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    public void StartActualGame()
+    {
+        isTutorial = false;
         playerPrefab.SetActive(true); // Activate the player prefab when the game starts
         // Try to auto-find countdown text if not set
         if (countdownText == null)
@@ -275,6 +395,28 @@ public class RunnerGameManager : MonoBehaviour
     private void Update()
     {
         if (!isPlaying || isGameOver) return;
+
+        if (isTutorial)
+        {
+            currentSpeed = initialSpeed;
+            score = 0f;
+
+            if (tutorialCompleting)
+            {
+                tutorialCompleteTimer -= Time.deltaTime;
+                if (tutorialCompleteTimer <= 0f)
+                {
+                    isTutorial = false;
+                    hasCompletedTutorialOnce = true;
+                    tutorialCompleting = false;
+                    StartActualGame();
+                    return;
+                }
+            }
+
+            ScrollAndRecycle();
+            return;
+        }
 
         // Gradually increase game speed to increase difficulty
         currentSpeed = Mathf.Min(maxSpeed, currentSpeed + speedIncreaseRate * Time.deltaTime);

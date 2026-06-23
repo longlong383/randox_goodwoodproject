@@ -29,6 +29,10 @@ public class RunnerUIController : MonoBehaviour
     // Input System
     private RunnerUIActions inputActions;
 
+    [Header("Tutorial Elements")]
+    public GameObject tutorialPanel;
+    public TextMeshProUGUI tutorialText;
+
     private void Awake()
     {
         if (Instance == null)
@@ -75,9 +79,33 @@ public class RunnerUIController : MonoBehaviour
             startBtn.onClick.AddListener(OnStartButtonClicked);
         }
 
-
         SetAllPanelsOff();
         if (startPanel != null) startPanel.SetActive(true);
+    }
+
+    private void UpdateTutorialUI()
+    {
+        if (RunnerGameManager.Instance == null || tutorialText == null) return;
+
+        var manager = RunnerGameManager.Instance;
+
+        string laneStatus = manager.tutorialLaneSwitched ? "<color=green> Done</color>" : "<color=yellow> Practice</color>";
+        string jumpStatus = manager.tutorialJumped ? "<color=green> Done</color>" : "<color=yellow> Practice</color>";
+        string slideStatus = manager.tutorialSlid ? "<color=green> Done</color>" : "<color=yellow> Practice</color>";
+
+        if (manager.tutorialLaneSwitched && manager.tutorialJumped && manager.tutorialSlid)
+        {
+            tutorialText.text = $"TUTORIAL COMPLETED!</b></color></size>\n\n" +
+                                $"<color=green>Great job! Get ready for the actual game...</color>";
+        }
+        else
+        {
+            tutorialText.text = $"TUTORIAL MODE</b></color></size>\n" +
+                                $"Learn the basic movement controls:</size>\n\n" +
+                                $"Switch Lanes (A/D or Arrows):</b> {laneStatus}\n" +
+                                $"Jump (Space):</b> {jumpStatus}\n" +
+                                $"Slide (C):</b> {slideStatus}";
+        }
     }
 
     private void Update()
@@ -87,7 +115,16 @@ public class RunnerUIController : MonoBehaviour
         UpdateUIState();
 
         if ((RunnerGameManager.Instance.isPlaying || RunnerGameManager.Instance.isCountingDown) && !RunnerGameManager.Instance.isGameOver)
-            UpdateGameplayHUD();
+        {
+            if (RunnerGameManager.Instance.isTutorial)
+            {
+                UpdateTutorialUI();
+            }
+            else
+            {
+                UpdateGameplayHUD();
+            }
+        }
     }
 
     // Called by the Input System when Space is pressed
@@ -125,9 +162,35 @@ public class RunnerUIController : MonoBehaviour
         bool isPlaying = RunnerGameManager.Instance.isPlaying;
         bool isGameOver = RunnerGameManager.Instance.isGameOver;
         bool isCountingDown = RunnerGameManager.Instance.isCountingDown;
+        bool isTutorial = RunnerGameManager.Instance.isTutorial;
 
         if (startPanel != null) startPanel.SetActive(!isPlaying && !isGameOver && !isCountingDown);
-        if (gameplayHUD != null) gameplayHUD.SetActive((isPlaying || isCountingDown) && !isGameOver);
+        
+        if (gameplayHUD != null)
+        {
+            gameplayHUD.SetActive((isPlaying || isCountingDown) && !isGameOver);
+            
+            if (gameplayHUD.activeSelf)
+            {
+                if (tutorialPanel != null)
+                {
+                    tutorialPanel.SetActive(isTutorial);
+                }
+
+                Transform scorePanelTrans = gameplayHUD.transform.Find("ScorePanel");
+                if (scorePanelTrans != null)
+                {
+                    scorePanelTrans.gameObject.SetActive(!isTutorial);
+                }
+
+                Transform timerTextTrans = gameplayHUD.transform.Find("TimerText");
+                if (timerTextTrans != null)
+                {
+                    timerTextTrans.gameObject.SetActive(!isTutorial);
+                }
+            }
+        }
+        
         if (gameOverPanel != null) gameOverPanel.SetActive(isGameOver);
     }
 

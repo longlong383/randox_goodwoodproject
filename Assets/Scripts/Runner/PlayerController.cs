@@ -189,6 +189,11 @@ public class PlayerController : MonoBehaviour
             }
             isJumping = true;
             jumpTimer = 0f;
+
+            if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.isTutorial)
+            {
+                RunnerGameManager.Instance.RegisterTutorialAction(RunnerGameManager.TutorialAction.Jump);
+            }
         }
     }
 
@@ -225,6 +230,11 @@ public class PlayerController : MonoBehaviour
         }
 
         FireTrigger("Sliding");
+
+        if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.isTutorial)
+        {
+            RunnerGameManager.Instance.RegisterTutorialAction(RunnerGameManager.TutorialAction.Slide);
+        }
     }
 
     /// <summary>Fire the default trigger (set via the Inspector) on the Animator Controller.</summary>
@@ -300,6 +310,10 @@ public class PlayerController : MonoBehaviour
     private void SwitchLane(int direction)
     {
         currentLane = Mathf.Clamp(currentLane + direction, -1, 1);
+        if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.isTutorial)
+        {
+            RunnerGameManager.Instance.RegisterTutorialAction(RunnerGameManager.TutorialAction.LaneSwitch);
+        }
     }
     
     private void HandleMovement()
