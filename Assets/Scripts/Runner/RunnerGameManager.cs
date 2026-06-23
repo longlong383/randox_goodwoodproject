@@ -83,6 +83,7 @@ public class RunnerGameManager : MonoBehaviour
     private float groundDistanceAccumulator;
     private float tunnelDistanceAccumulator;
 
+    [SerializeField] private GameObject playerPrefab; // Reference to the Player prefab
 
     private void Awake()
     {
@@ -103,6 +104,7 @@ public class RunnerGameManager : MonoBehaviour
 
     public void StartGame()
     {
+        playerPrefab.SetActive(true); // Activate the player prefab when the game starts
         // Try to auto-find countdown text if not set
         if (countdownText == null)
         {
@@ -734,6 +736,7 @@ public class RunnerGameManager : MonoBehaviour
         if (RunnerUIController.Instance != null)
         {
             RunnerUIController.Instance.ShowGameOver();
+            playerPrefab.SetActive(false); // Deactivate the player prefab when the game ends
         }
         if (healthMeterController != null)
         {
