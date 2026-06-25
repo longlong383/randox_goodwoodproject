@@ -16,7 +16,7 @@ public class RunnerUIController : MonoBehaviour
     [Header("Gameplay HUD Elements")]
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI biochipsText;
-
+    public Image healthMeterContainer;
     [Header("Speed Dial Elements")]
     public Image speedDialFillImage;
     public TextMeshProUGUI speedDialValueText;
@@ -101,7 +101,9 @@ public class RunnerUIController : MonoBehaviour
         // Space works on the start screen AND the game over screen
         if (!isPlaying || isGameOver)
         {
+
             RunnerGameManager.Instance.StartGame();
+
         }
     }
 

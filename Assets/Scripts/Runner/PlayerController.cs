@@ -37,6 +37,7 @@ public class PlayerController : MonoBehaviour
     [Header("Input System Actions")]
     private InputAction moveAction;
     private InputAction jumpAction;
+    private InputAction slideAction;
     private bool laneSwitchPressed = false;
 
     private void Start()
@@ -72,12 +73,14 @@ public class PlayerController : MonoBehaviour
             playerMap.Enable();
             moveAction = playerMap.FindAction("Move");
             jumpAction = playerMap.FindAction("Jump");
+            slideAction = playerMap.FindAction("Crouch");
         }
         else
         {
             // Fallback: search globally if maps aren't loaded correctly
             moveAction = InputSystem.actions?.FindAction("Move");
             jumpAction = InputSystem.actions?.FindAction("Jump");
+            slideAction = InputSystem.actions?.FindAction("Crouch");
         }
     }
 
@@ -128,7 +131,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // 3. Slide trigger (C key)
-        if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
+        if (slideAction != null && slideAction.WasPressedThisFrame())
         {
             Slide();
         }
@@ -259,7 +262,7 @@ public class PlayerController : MonoBehaviour
     {
         currentLane = Mathf.Clamp(currentLane + direction, -1, 1);
     }
-    
+
     private void HandleMovement()
     {
         // Interpolate horizontal position

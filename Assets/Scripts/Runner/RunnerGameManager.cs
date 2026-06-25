@@ -6,7 +6,7 @@ using System.Collections;
 public class RunnerGameManager : MonoBehaviour
 {
     public static RunnerGameManager Instance { get; private set; }
-    public HealthMeterController healthMeterController;
+    public HealthMeterFinal healthMeterController;
     private const float HEALTH_BEGINNING_VALUE = 4f;
     private float healthScore = HEALTH_BEGINNING_VALUE;
     private float minHealthScore = 0f;
@@ -440,8 +440,8 @@ public class RunnerGameManager : MonoBehaviour
             // Apply correct prefab properties
             if (chosenPrefab.name.Contains("Biochip"))
             {
-                coll.transform.rotation = Quaternion.Euler(270f, 90f, 0f);
-                coll.transform.localScale = Vector3.one;
+                coll.transform.rotation = Quaternion.Euler(180f, 0f, 0f);
+                coll.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
 
                 BoxCollider bc = coll.GetComponent<BoxCollider>();
                 if (bc == null) bc = coll.AddComponent<BoxCollider>();
