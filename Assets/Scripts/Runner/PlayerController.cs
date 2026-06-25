@@ -73,14 +73,14 @@ public class PlayerController : MonoBehaviour
             playerMap.Enable();
             moveAction = playerMap.FindAction("Move");
             jumpAction = playerMap.FindAction("Jump");
-            // slideAction = playerMap.FindAction("Crouch");
+            slideAction = playerMap.FindAction("Crouch");
         }
         else
         {
             // Fallback: search globally if maps aren't loaded correctly
             moveAction = InputSystem.actions?.FindAction("Move");
             jumpAction = InputSystem.actions?.FindAction("Jump");
-            //  slideAction = InputSystem.actions?.FindAction("Crouch");
+            slideAction = InputSystem.actions?.FindAction("Crouch");
         }
     }
 
@@ -99,9 +99,6 @@ public class PlayerController : MonoBehaviour
 
     private void HandleInput()
     {
-        Debug.Log("PlayerController: HandleInput() called with");
-        Debug.Log("moveAction: " + moveAction);
-        Debug.Log("jumpAction: " + jumpAction);
         // 1. Lane switching discrete check
         if (moveAction != null)
         {
@@ -147,6 +144,7 @@ public class PlayerController : MonoBehaviour
             slideTimer -= Time.deltaTime;
             if (slideTimer <= 0f)
             {
+                Debug.Log("PlayerController: Slide duration ended, stopping slide.");
                 StopSliding();
             }
         }
@@ -218,6 +216,7 @@ public class PlayerController : MonoBehaviour
 
         if (isSliding)
         {
+            return;
             slideTimer = slideDuration; // Reset timer if already sliding
             return;
         }
