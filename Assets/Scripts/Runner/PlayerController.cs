@@ -73,14 +73,14 @@ public class PlayerController : MonoBehaviour
             playerMap.Enable();
             moveAction = playerMap.FindAction("Move");
             jumpAction = playerMap.FindAction("Jump");
-            slideAction = playerMap.FindAction("Crouch");
+            // slideAction = playerMap.FindAction("Crouch");
         }
         else
         {
             // Fallback: search globally if maps aren't loaded correctly
             moveAction = InputSystem.actions?.FindAction("Move");
             jumpAction = InputSystem.actions?.FindAction("Jump");
-            slideAction = InputSystem.actions?.FindAction("Crouch");
+            //  slideAction = InputSystem.actions?.FindAction("Crouch");
         }
     }
 
@@ -99,6 +99,9 @@ public class PlayerController : MonoBehaviour
 
     private void HandleInput()
     {
+        Debug.Log("PlayerController: HandleInput() called with");
+        Debug.Log("moveAction: " + moveAction);
+        Debug.Log("jumpAction: " + jumpAction);
         // 1. Lane switching discrete check
         if (moveAction != null)
         {
@@ -124,7 +127,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // 2. Jump trigger
+        // 2. Jump trigger`
         if (jumpAction != null && jumpAction.WasPressedThisFrame())
         {
             Jump();
@@ -192,6 +195,11 @@ public class PlayerController : MonoBehaviour
             }
             isJumping = true;
             jumpTimer = 0f;
+
+            if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.isTutorial)
+            {
+                RunnerGameManager.Instance.RegisterTutorialAction(RunnerGameManager.TutorialAction.Jump);
+            }
         }
     }
 
@@ -228,6 +236,11 @@ public class PlayerController : MonoBehaviour
         }
 
         FireTrigger("Sliding");
+
+        if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.isTutorial)
+        {
+            RunnerGameManager.Instance.RegisterTutorialAction(RunnerGameManager.TutorialAction.Slide);
+        }
     }
 
     /// <summary>Fire the default trigger (set via the Inspector) on the Animator Controller.</summary>
@@ -247,6 +260,48 @@ public class PlayerController : MonoBehaviour
         animator.SetTrigger(trigger);
     }
 
+    /// <summary>Resets the player controller's state and position to default for game start.</summary>
+    public void ResetPlayer()
+    {
+        currentLane = 0;
+        isJumping = false;
+        jumpTimer = 0f;
+        isSliding = false;
+        slideTimer = 0f;
+
+        if (capsuleCollider == null)
+        {
+            capsuleCollider = GetComponent<CapsuleCollider>();
+        }
+        if (capsuleCollider != null)
+        {
+            if (originalColliderHeight == 0f)
+            {
+                originalColliderHeight = capsuleCollider.height;
+                originalColliderCenter = capsuleCollider.center;
+            }
+            capsuleCollider.height = originalColliderHeight;
+            capsuleCollider.center = originalColliderCenter;
+        }
+
+        transform.position = new Vector3(0f, groundY, -6f);
+        transform.rotation = Quaternion.identity;
+
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = GetComponentInChildren<Animator>();
+            }
+        }
+        if (animator != null)
+        {
+            animator.Rebind();
+            animator.Update(0f);
+        }
+    }
+
     /// <summary>True when the player is allowed to respond to controls.</summary>
     private bool CanControl()
     {
@@ -261,6 +316,10 @@ public class PlayerController : MonoBehaviour
     private void SwitchLane(int direction)
     {
         currentLane = Mathf.Clamp(currentLane + direction, -1, 1);
+        if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.isTutorial)
+        {
+            RunnerGameManager.Instance.RegisterTutorialAction(RunnerGameManager.TutorialAction.LaneSwitch);
+        }
     }
 
     private void HandleMovement()
