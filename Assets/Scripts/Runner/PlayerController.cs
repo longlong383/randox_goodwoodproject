@@ -215,6 +215,7 @@ public class PlayerController : MonoBehaviour
 
         if (isSliding)
         {
+            return;
             slideTimer = slideDuration; // Reset timer if already sliding
             return;
         }

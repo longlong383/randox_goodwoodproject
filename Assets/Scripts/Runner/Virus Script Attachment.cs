@@ -9,34 +9,19 @@ public class YourScript : MonoBehaviour
     
     private string[] wordBank =
     {
-        "Diabetes",
-        "High Cholesterol",
-        "Cardiovascular Disease",
-        "High Blood Pressure",
+        "Anaemia",
+        "Thalassaemia",
+        "Iron Overload",
+        "Familial Hypercholesterollaemia (FH)",
+        "Lipoprotein(a)",
+        "Cardiovascular Risk",
+        "Atherosclerosis",
         "Metabolic Syndrome",
-        "Insulin Resistance",
-        "Familial Hypercholesterolaemia",
-        "Vitamin D Deficiency",
+        "Insulin Resistance", 
+        "Type 1 diabetes",
         "Iron Deficiency",
         "Vitamin B12 Deficiency",
-        "Hypothyroidism",
-        "Hyperthyroidism",
-        "Testosterone Deficiency",
-        "Premature Ovarian Insufficiency",
-        "NAFLD (Non-Alcoholic Fatty Liver Disease)",
-        "Liver Fibrosis",
-        "Chronic Kidney Disease",
-        "Urinary Tract Infection",
-        "Coeliac Disease",
-        "H. Pylori Infection",
-        "Lactose Intolerance",
-        "Anaemia",
-        "Iron Deficiency Anaemia",
-        "Genetic Haemochromatosis",
-        "Pernicious Anaemia",
-        "Rheumatoid Arthritis",
-        "Gout Risk",
-        "Inflammation"
+        "Vitamin D Deficiency"
     };
 
     // Fires on Instantiate AND every time the object is re-enabled from the
