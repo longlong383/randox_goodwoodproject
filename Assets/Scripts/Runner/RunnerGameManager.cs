@@ -66,6 +66,7 @@ public class RunnerGameManager : MonoBehaviour
     private bool timerRunning = false;
     private float gameStartTime = 15f;
 
+    [SerializeField] private GameObject redDot;
     public enum TutorialAction
     {
         LaneSwitch,
@@ -139,6 +140,10 @@ public class RunnerGameManager : MonoBehaviour
 
     private void Start()
     {
+        if (redDot == null)
+        {
+            Debug.LogError("Red Dot reference is not set in the RunnerGameManager. Please assign it in the Inspector.");
+        }
         //StartGame();
     }
 
@@ -336,6 +341,8 @@ public class RunnerGameManager : MonoBehaviour
             countdownText.color = Color.white;
         }
 
+        float originalRedDotY = redDot.transform.position.y;
+        redDot.transform.position = new Vector3(redDot.transform.position.x, 0.1f, redDot.transform.position.z);
         foreach (string step in countdownSteps)
         {
             if (countdownText != null)
@@ -362,7 +369,7 @@ public class RunnerGameManager : MonoBehaviour
                 yield return new WaitForSeconds(0.8f);
             }
         }
-
+        redDot.transform.position = new Vector3(redDot.transform.position.x, originalRedDotY, redDot.transform.position.z);
         // Countdown complete!
         isCountingDown = false;
         isPlaying = true;

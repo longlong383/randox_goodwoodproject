@@ -6,7 +6,7 @@ public class YourScript : MonoBehaviour
     [SerializeField] private TMP_Text textField;
 
     [Tooltip("Pool of words. One is picked at random each time this virus spawns.")]
-    [SerializeField]
+    
     private string[] wordBank =
     {
         "Diabetes",
