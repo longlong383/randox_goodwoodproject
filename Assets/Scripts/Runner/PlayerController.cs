@@ -124,7 +124,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // 2. Jump trigger
+        // 2. Jump trigger`
         if (jumpAction != null && jumpAction.WasPressedThisFrame())
         {
             Jump();
@@ -144,6 +144,7 @@ public class PlayerController : MonoBehaviour
             slideTimer -= Time.deltaTime;
             if (slideTimer <= 0f)
             {
+                Debug.Log("PlayerController: Slide duration ended, stopping slide.");
                 StopSliding();
             }
         }
