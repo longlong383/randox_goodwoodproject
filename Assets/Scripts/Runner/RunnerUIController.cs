@@ -89,9 +89,9 @@ public class RunnerUIController : MonoBehaviour
 
         var manager = RunnerGameManager.Instance;
 
-        string laneStatus = manager.tutorialLaneSwitched ? "<color=green> Done</color>" : "<color=yellow> Practice</color>";
-        string jumpStatus = manager.tutorialJumped ? "<color=green> Done</color>" : "<color=yellow> Practice</color>";
-        string slideStatus = manager.tutorialSlid ? "<color=green> Done</color>" : "<color=yellow> Practice</color>";
+        string laneStatus = manager.tutorialLaneSwitched ? "<color=green> DONE</color>" : "<color=yellow> TRY IT</color>";
+        string jumpStatus = manager.tutorialJumped ? "<color=green> DONE</color>" : "<color=yellow> TRY IT</color>";
+        string slideStatus = manager.tutorialSlid ? "<color=green> DONE</color>" : "<color=yellow> TRY IT</color>";
 
         if (manager.tutorialLaneSwitched && manager.tutorialJumped && manager.tutorialSlid)
         {
@@ -100,11 +100,11 @@ public class RunnerUIController : MonoBehaviour
         }
         else
         {
-            tutorialText.text = $"TUTORIAL MODE</b></color></size>\n" +
-                                $"Learn the basic movement controls:</size>\n\n" +
-                                $"Switch Lanes (A/D or Arrows):</b> {laneStatus}\n" +
-                                $"Jump (Space):</b> {jumpStatus}\n" +
-                                $"Slide (C):</b> {slideStatus}";
+            tutorialText.text = $"<color=yellow>LEARN THE MOVEMENT CONTROLS</color></size>\n" +
+                                $"-----------------------------\n" +
+                                $"MOVE LEFT AND RIGHT:</b> {laneStatus}\n" +
+                                $"DUCK TO SLIDE:</b> {jumpStatus}\n" +
+                                $"HANDS UP TO JUMP:</b> {slideStatus}";
         }
     }
 
