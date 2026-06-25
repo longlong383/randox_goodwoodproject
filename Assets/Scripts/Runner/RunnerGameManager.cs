@@ -179,7 +179,7 @@ public class RunnerGameManager : MonoBehaviour
         spawnTimer = 0f;
         groundDistanceAccumulator = 0f;
         tunnelDistanceAccumulator = 0f;
-        
+
         // Initial ground generation
         nextGroundZ = -12f;
         float groundZ = nextGroundZ;
@@ -213,7 +213,7 @@ public class RunnerGameManager : MonoBehaviour
                     {
                         pc.ResetPlayer();
                     }
-                    
+
                     // Trigger Start animation
                     Animator animator = child.GetComponent<Animator>();
                     if (animator != null)
@@ -896,7 +896,8 @@ public class RunnerGameManager : MonoBehaviour
         isGameOver = true;
         isPlaying = false;
         currentSpeed = 0f;
-
+        timeRemaining = gameStartTime; // Reset timer for next game
+        timerRunning = false;
         if (RunnerUIController.Instance != null)
         {
             RunnerUIController.Instance.ShowGameOver();
