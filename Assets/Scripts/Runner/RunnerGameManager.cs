@@ -20,8 +20,11 @@ public class RunnerGameManager : MonoBehaviour
     public GameObject[] collectiblePrefabs;
     [Tooltip("Obstacle prefab: Virus")]
     public GameObject obstaclePrefab;
+    public Connections Connections; // Reference to the Connection script
 
     [Header("Gameplay Settings")]
+
+
     public float initialSpeed = 12f;
     public float speedIncreaseRate = 0.1f;
     public float maxSpeed = 30f;
@@ -64,7 +67,7 @@ public class RunnerGameManager : MonoBehaviour
     public TextMeshProUGUI timerText;
     private float timeRemaining;
     private bool timerRunning = false;
-    private float gameStartTime = 15f;
+    private float gameStartTime = 60f;
 
     [SerializeField] private GameObject redDot;
     public enum TutorialAction
@@ -880,7 +883,7 @@ public class RunnerGameManager : MonoBehaviour
         EndGame();
         // Add your game-over logic here
     }
-    private void EndGame()
+    public void EndGame(bool save = true)
     {
         if (countdownCoroutine != null)
         {
@@ -932,6 +935,9 @@ public class RunnerGameManager : MonoBehaviour
         {
             healthMeterController.Deactivate();
         }
-
+        if (save)
+        {
+            Connections.SendWebSocketMessage(score);
+        }
     }
 }
