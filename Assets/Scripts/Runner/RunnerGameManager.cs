@@ -901,7 +901,32 @@ public class RunnerGameManager : MonoBehaviour
         if (RunnerUIController.Instance != null)
         {
             RunnerUIController.Instance.ShowGameOver();
-            playerPrefab.SetActive(false); // Deactivate the player prefab when the game ends
+            redDot.transform.position = new Vector3(redDot.transform.position.x, 0.04f, redDot.transform.position.z);
+            GameObject playerObj = GameObject.Find("Player");
+        if (playerObj != null)
+        {
+            foreach (Transform child in playerObj.transform)
+            {
+                if (child.gameObject.activeSelf)
+                {
+                    PlayerController pc = child.GetComponent<PlayerController>();
+                    if (pc != null)
+                    {
+                        pc.ResetPlayer();
+                    }
+
+                    // Trigger Start animation
+                    Animator animator = child.GetComponent<Animator>();
+                    if (animator != null)
+                    {
+                        animator.SetTrigger("Restart");
+                    }
+                    child.transform.Rotate(0, 180, 0);
+                    break;
+                }
+            }
+        }
+            //playerPrefab.SetActive(false); // Deactivate the player prefab when the game ends
         }
         if (healthMeterController != null)
         {
