@@ -103,8 +103,8 @@ public class RunnerUIController : MonoBehaviour
             tutorialText.text = $"<color=yellow>LEARN THE MOVEMENT CONTROLS</color></size>\n" +
                                 $"-----------------------------\n" +
                                 $"MOVE LEFT AND RIGHT:</b> {laneStatus}\n" +
-                                $"DUCK TO SLIDE:</b> {jumpStatus}\n" +
-                                $"HANDS UP TO JUMP:</b> {slideStatus}";
+                                $"HANDS UP TO JUMP:</b> {jumpStatus}\n" +
+                                $"DUCK TO SLIDE:</b> {slideStatus}";
         }
     }
 
