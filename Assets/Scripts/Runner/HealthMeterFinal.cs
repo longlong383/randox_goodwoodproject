@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 using UnityEngine;
-
+using UnityEngine.UI;
 /// <summary>
 /// Drives the HUD HealthMeter: lights up meter segments based on a value and
 /// rotates the needle to point at the corresponding spot on the arc.
@@ -98,19 +98,37 @@ public class HealthMeterFinal : MonoBehaviour
 
     /// <summary>Show every segment whose threshold has been reached; hide the rest.</summary>
     private void UpdateSegments()
+{
+    if (meters == null || meters.Length == 0) return;
+
+    float fill = currentValue / maxValue;
+    int litCount = Mathf.CeilToInt(fill * meters.Length);
+
+    for (int i = 0; i < meters.Length; i++)
     {
-        if (meters == null || meters.Length == 0) return;
+        if (meters[i] == null) continue;
 
-        // fill is 0..1; with 10 segments and maxValue 50 each segment is worth 5 points.
-        float fill = currentValue / maxValue;
-        int litCount = Mathf.CeilToInt(fill * meters.Length);
+        Image image = meters[i].GetComponent<Image>();
+        if (image == null) continue;
 
-        for (int i = 0; i < meters.Length; i++)
+        Color color = image.color;
+
+        if (i >= litCount)
         {
-            if (meters[i] != null)
-                meters[i].SetActive(i < litCount);
+            // Empty segments
+            color.a = 0f;
         }
+        else
+        {
+            // Fade older segments
+            float t = (float)(i + 1) / litCount;
+            float alpha = Mathf.Lerp(0.01f, 1f, t);
+            color.a = alpha;
+        }
+
+        image.color = color;
     }
+}
     public void Activate()
     {
         for (int i = 0; i < meters.Length; i++)
