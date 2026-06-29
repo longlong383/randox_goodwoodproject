@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 using UnityEngine;
-
+using UnityEngine.UI;
 /// <summary>
 /// Drives the HUD HealthMeter: lights up meter segments based on a value and
 /// rotates the needle to point at the corresponding spot on the arc.
@@ -25,7 +25,7 @@ public class HealthMeterFinal : MonoBehaviour
     [SerializeField] private float maxAngle = 90f;
 
     [Header("Range")]
-    [SerializeField] private float maxValue = 4f;
+    [SerializeField] private float maxValue = 5f;
 
     [Header("Smoothing (optional)")]
     [Tooltip("If on, the needle eases toward its target instead of snapping.")]
@@ -33,16 +33,23 @@ public class HealthMeterFinal : MonoBehaviour
     [Tooltip("Needle rotation speed in degrees per second when smoothing is on.")]
     [SerializeField] private float needleSpeed = 360f;
 
-    private float currentValue = 4f;
+    private float currentValue = 6f;
 
     private float targetAngle;
 
+    private int maxIndex = 0;
     private void Awake()
     {
+        foreach (Transform child in transform)
+        {
+            if (child.name.Contains("meter"))
+                maxIndex++;
+        }
+        Debug.Log("Max index: " + maxIndex);
         // Auto-wire the segments by name if they weren't assigned in the Inspector.
         if (meters == null || meters.Length == 0)
         {
-            meters = new GameObject[4];
+            meters = new GameObject[maxIndex];
             for (int i = 0; i < meters.Length; i++)
             {
                 Transform seg = transform.Find("meter" + (i + 1));
@@ -91,19 +98,37 @@ public class HealthMeterFinal : MonoBehaviour
 
     /// <summary>Show every segment whose threshold has been reached; hide the rest.</summary>
     private void UpdateSegments()
+{
+    if (meters == null || meters.Length == 0) return;
+
+    float fill = currentValue / maxValue;
+    int litCount = Mathf.CeilToInt(fill * meters.Length);
+
+    for (int i = 0; i < meters.Length; i++)
     {
-        if (meters == null || meters.Length == 0) return;
+        if (meters[i] == null) continue;
 
-        // fill is 0..1; with 10 segments and maxValue 50 each segment is worth 5 points.
-        float fill = currentValue / maxValue;
-        int litCount = Mathf.CeilToInt(fill * meters.Length);
+        Image image = meters[i].GetComponent<Image>();
+        if (image == null) continue;
 
-        for (int i = 0; i < meters.Length; i++)
+        Color color = image.color;
+
+        if (i >= litCount)
         {
-            if (meters[i] != null)
-                meters[i].SetActive(i < litCount);
+            // Empty segments
+            color.a = 0f;
         }
+        else
+        {
+            // Fade older segments
+            float t = (float)(i + 1) / litCount;
+            float alpha = Mathf.Lerp(0.01f, 1f, t);
+            color.a = alpha;
+        }
+
+        image.color = color;
     }
+}
     public void Activate()
     {
         for (int i = 0; i < meters.Length; i++)

@@ -7,7 +7,7 @@ public class RunnerGameManager : MonoBehaviour
 {
     public static RunnerGameManager Instance { get; private set; }
     public HealthMeterFinal healthMeterController;
-    private const float HEALTH_BEGINNING_VALUE = 4f;
+    private const float HEALTH_BEGINNING_VALUE = 5f;
     private float healthScore = HEALTH_BEGINNING_VALUE;
     private float minHealthScore = 0f;
     private float maxHealthScore = 4f;
