@@ -25,7 +25,7 @@ public class HealthMeterFinal : MonoBehaviour
     [SerializeField] private float maxAngle = 90f;
 
     [Header("Range")]
-    [SerializeField] private float maxValue = 4f;
+    [SerializeField] private float maxValue = 5f;
 
     [Header("Smoothing (optional)")]
     [Tooltip("If on, the needle eases toward its target instead of snapping.")]
@@ -33,16 +33,23 @@ public class HealthMeterFinal : MonoBehaviour
     [Tooltip("Needle rotation speed in degrees per second when smoothing is on.")]
     [SerializeField] private float needleSpeed = 360f;
 
-    private float currentValue = 4f;
+    private float currentValue = 6f;
 
     private float targetAngle;
 
+    private int maxIndex = 0;
     private void Awake()
     {
+        foreach (Transform child in transform)
+        {
+            if (child.name.Contains("meter"))
+                maxIndex++;
+        }
+        Debug.Log("Max index: " + maxIndex);
         // Auto-wire the segments by name if they weren't assigned in the Inspector.
         if (meters == null || meters.Length == 0)
         {
-            meters = new GameObject[4];
+            meters = new GameObject[maxIndex];
             for (int i = 0; i < meters.Length; i++)
             {
                 Transform seg = transform.Find("meter" + (i + 1));
