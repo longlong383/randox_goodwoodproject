@@ -15,7 +15,7 @@ public class HealthMeterFinal : MonoBehaviour
     [Header("Meter Segments")]
     [Tooltip("Ordered lowest -> highest meter1 thru meter4 " +
              "Leave empty to auto-find meter1...meter4 by name at Awake.")]
-    [SerializeField] private GameObject[] meters = new GameObject[0];
+    [SerializeField] private GameObject[] meters = new GameObject[5];
 
     [Header("Needle")]
     [SerializeField] private GameObject needle;
@@ -98,37 +98,37 @@ public class HealthMeterFinal : MonoBehaviour
 
     /// <summary>Show every segment whose threshold has been reached; hide the rest.</summary>
     private void UpdateSegments()
-{
-    if (meters == null || meters.Length == 0) return;
-
-    float fill = currentValue / maxValue;
-    int litCount = Mathf.CeilToInt(fill * meters.Length);
-
-    for (int i = 0; i < meters.Length; i++)
     {
-        if (meters[i] == null) continue;
+        if (meters == null || meters.Length == 0) return;
 
-        Image image = meters[i].GetComponent<Image>();
-        if (image == null) continue;
+        float fill = currentValue / maxValue;
+        int litCount = Mathf.CeilToInt(fill * meters.Length);
 
-        Color color = image.color;
-
-        if (i >= litCount)
+        for (int i = 0; i < meters.Length; i++)
         {
-            // Empty segments
-            color.a = 0f;
-        }
-        else
-        {
-            // Fade older segments
-            float t = (float)(i + 1) / litCount;
-            float alpha = Mathf.Lerp(0.01f, 1f, t);
-            color.a = alpha;
-        }
+            if (meters[i] == null) continue;
 
-        image.color = color;
+            Image image = meters[i].GetComponent<Image>();
+            if (image == null) continue;
+
+            Color color = image.color;
+
+            if (i >= litCount)
+            {
+                // Empty segments
+                color.a = 0f;
+            }
+            else
+            {
+                // Fade older segments
+                float t = (float)(i + 1) / litCount;
+                float alpha = Mathf.Lerp(0.01f, 1f, t);
+                color.a = alpha;
+            }
+
+            image.color = color;
+        }
     }
-}
     public void Activate()
     {
         for (int i = 0; i < meters.Length; i++)
@@ -158,9 +158,11 @@ public class HealthMeterFinal : MonoBehaviour
     private void UpdateNeedleTarget()
     {
         float fill = currentValue / maxValue;
+        Debug.Log("currentValue: " + currentValue + ", maxValue: " + maxValue);
+        Debug.Log("HealthMeterController: fill: " + fill);
         targetAngle = Mathf.Lerp(minAngle, maxAngle, fill);
         needle.transform.localRotation = Quaternion.Euler(0f, 0f, -targetAngle);
-        Debug.Log("HealthMeterController: targetAngle: " + targetAngle);
+        // Debug.Log("HealthMeterController: targetAngle: " + targetAngle);
 
     }
 
