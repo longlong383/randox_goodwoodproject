@@ -80,7 +80,7 @@ public class RunnerUIController : MonoBehaviour
         }
 
         SetAllPanelsOff();
-        if (startPanel != null) startPanel.SetActive(true);
+        //if (startPanel != null) startPanel.SetActive(true);
     }
 
     private void UpdateTutorialUI()
@@ -101,7 +101,6 @@ public class RunnerUIController : MonoBehaviour
         else
         {
             tutorialText.text = $"<color=yellow>LEARN THE MOVEMENT CONTROLS</color></size>\n" +
-                                $"-----------------------------\n" +
                                 $"MOVE LEFT AND RIGHT:</b> {laneStatus}\n" +
                                 $"DUCK TO SLIDE:</b> {slideStatus}\n" +
                                 $"HANDS UP TO JUMP:</b> {jumpStatus}\n" ;
