@@ -80,7 +80,7 @@ public class RunnerUIController : MonoBehaviour
         }
 
         SetAllPanelsOff();
-        if (startPanel != null) startPanel.SetActive(true);
+        //if (startPanel != null) startPanel.SetActive(true);
     }
 
     private void UpdateTutorialUI()

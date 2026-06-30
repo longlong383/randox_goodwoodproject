@@ -53,7 +53,9 @@ public class Connections : MonoBehaviour
                     GameObject.Find("Player").GetComponent<PlayerGenderController>().selectNonBinary();
                 }
 
-                RunnerGameManager.Instance?.StartGame();
+                //RunnerGameManager.Instance?.StartGame();
+                //loadingScreen.SetActive(false);
+                //startPanel.SetActive(true);
             }
             if (type == "abort")
             {

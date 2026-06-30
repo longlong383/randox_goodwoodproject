@@ -344,7 +344,7 @@ public class RunnerGameManager : MonoBehaviour
             countdownText.color = Color.white;
         }
 
-        float originalRedDotY = redDot.transform.position.y;
+        float originalRedDotY = -0.09f;
         redDot.transform.position = new Vector3(redDot.transform.position.x, 0.1f, redDot.transform.position.z);
         foreach (string step in countdownSteps)
         {
