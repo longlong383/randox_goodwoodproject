@@ -33,7 +33,7 @@ public class HealthMeterFinal : MonoBehaviour
     [Tooltip("Needle rotation speed in degrees per second when smoothing is on.")]
     [SerializeField] private float needleSpeed = 360f;
 
-    private float currentValue = 6f;
+    private float currentValue = 5f;
 
     private float targetAngle;
 
