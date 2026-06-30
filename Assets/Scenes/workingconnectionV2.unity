@@ -1066,7 +1066,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a4ac4d54306944da9f3029a08b89bac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  meters: []
+  meters:
+  - {fileID: 1905790166}
+  - {fileID: 320150081}
+  - {fileID: 767304842}
+  - {fileID: 1694641256}
+  - {fileID: 84742113}
   needle: {fileID: 1281972225}
   minAngle: -108
   maxAngle: 72

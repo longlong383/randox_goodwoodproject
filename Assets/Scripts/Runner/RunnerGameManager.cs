@@ -7,10 +7,10 @@ public class RunnerGameManager : MonoBehaviour
 {
     public static RunnerGameManager Instance { get; private set; }
     public HealthMeterFinal healthMeterController;
-    private const float HEALTH_BEGINNING_VALUE = 5f;
+    private const float HEALTH_BEGINNING_VALUE = 4f;
     private float healthScore = HEALTH_BEGINNING_VALUE;
     private float minHealthScore = 0f;
-    private float maxHealthScore = 4f;
+    private float maxHealthScore = 5f;
     [Header("Prefabs")]
     [Tooltip("The Running Ground prefab")]
     public GameObject groundPrefab;
@@ -861,7 +861,7 @@ public class RunnerGameManager : MonoBehaviour
             yield return new WaitForSeconds(1f);
 
             timeRemaining -= 1f;
-            Debug.Log("Time remaining: " + timeRemaining);
+            // Debug.Log("Time remaining: " + timeRemaining);
             if (timeRemaining <= 0f)
             {
                 timeRemaining = 0f;
@@ -906,29 +906,29 @@ public class RunnerGameManager : MonoBehaviour
             RunnerUIController.Instance.ShowGameOver();
             redDot.transform.position = new Vector3(redDot.transform.position.x, 0.04f, redDot.transform.position.z);
             GameObject playerObj = GameObject.Find("Player");
-        if (playerObj != null)
-        {
-            foreach (Transform child in playerObj.transform)
+            if (playerObj != null)
             {
-                if (child.gameObject.activeSelf)
+                foreach (Transform child in playerObj.transform)
                 {
-                    PlayerController pc = child.GetComponent<PlayerController>();
-                    if (pc != null)
+                    if (child.gameObject.activeSelf)
                     {
-                        pc.ResetPlayer();
-                    }
+                        PlayerController pc = child.GetComponent<PlayerController>();
+                        if (pc != null)
+                        {
+                            pc.ResetPlayer();
+                        }
 
-                    // Trigger Start animation
-                    Animator animator = child.GetComponent<Animator>();
-                    if (animator != null)
-                    {
-                        animator.SetTrigger("Restart");
+                        // Trigger Start animation
+                        Animator animator = child.GetComponent<Animator>();
+                        if (animator != null)
+                        {
+                            animator.SetTrigger("Restart");
+                        }
+                        child.transform.Rotate(0, 180, 0);
+                        break;
                     }
-                    child.transform.Rotate(0, 180, 0);
-                    break;
                 }
             }
-        }
             //playerPrefab.SetActive(false); // Deactivate the player prefab when the game ends
         }
         if (healthMeterController != null)
