@@ -21,7 +21,7 @@ public class RunnerGameManager : MonoBehaviour
     [Tooltip("Obstacle prefab: Virus")]
     public GameObject obstaclePrefab;
     public Connections Connections; // Reference to the Connection script
-
+    public CharacterSlideshow characterSlideshow; // Reference to the CharacterSlideshow script
     [Header("Gameplay Settings")]
 
 
@@ -152,6 +152,7 @@ public class RunnerGameManager : MonoBehaviour
 
     public void StartGame()
     {
+        characterSlideshow.StopAndHide();
         if (!hasCompletedTutorialOnce)
         {
             StartTutorial();
@@ -939,5 +940,6 @@ public class RunnerGameManager : MonoBehaviour
         {
             Connections.SendWebSocketMessage(score);
         }
+        characterSlideshow.ShowAndStart();
     }
 }
