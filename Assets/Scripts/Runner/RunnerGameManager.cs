@@ -6,11 +6,11 @@ using System.Collections;
 public class RunnerGameManager : MonoBehaviour
 {
     public static RunnerGameManager Instance { get; private set; }
-    public HealthMeterController healthMeterController;
-    private const float HEALTH_BEGINNING_VALUE = 4f;
+    public HealthMeterFinal healthMeterController;
+    private const float HEALTH_BEGINNING_VALUE = 5f;
     private float healthScore = HEALTH_BEGINNING_VALUE;
     private float minHealthScore = 0f;
-    private float maxHealthScore = 4f;
+    private float maxHealthScore = 5f;
     [Header("Prefabs")]
     [Tooltip("The Running Ground prefab")]
     public GameObject groundPrefab;
@@ -20,8 +20,11 @@ public class RunnerGameManager : MonoBehaviour
     public GameObject[] collectiblePrefabs;
     [Tooltip("Obstacle prefab: Virus")]
     public GameObject obstaclePrefab;
-
+    public Connections Connections; // Reference to the Connection script
+    public CharacterSlideshow characterSlideshow; // Reference to the CharacterSlideshow script
     [Header("Gameplay Settings")]
+
+
     public float initialSpeed = 12f;
     public float speedIncreaseRate = 0.1f;
     public float maxSpeed = 30f;
@@ -53,7 +56,10 @@ public class RunnerGameManager : MonoBehaviour
 
     [Header("Game State")]
     public bool isPlaying = false;
+    public bool isCountingDown = false;
     public bool isGameOver = false;
+    public TextMeshProUGUI countdownText;
+    private Coroutine countdownCoroutine;
     public float score = 0f;
     public int biochipsCollected = 0;
     public int femaleHormoneCollected = 0;
@@ -61,7 +67,53 @@ public class RunnerGameManager : MonoBehaviour
     public TextMeshProUGUI timerText;
     private float timeRemaining;
     private bool timerRunning = false;
-    private float gameStartTime = 15f;
+    private float gameStartTime = 60f;
+
+    [SerializeField] private GameObject redDot;
+
+    [SerializeField] private GameObject displayObjeects;
+    public enum TutorialAction
+    {
+        LaneSwitch,
+        Jump,
+        Slide,
+
+
+
+    }
+
+    [Header("Tutorial State")]
+    public bool isTutorial { get; private set; } = false;
+    public bool tutorialLaneSwitched { get; private set; } = false;
+    public bool tutorialJumped { get; private set; } = false;
+    public bool tutorialSlid { get; private set; } = false;
+    private bool hasCompletedTutorialOnce = false;
+    private bool tutorialCompleting = false;
+    private float tutorialCompleteTimer = 0f;
+
+    public void RegisterTutorialAction(TutorialAction action)
+    {
+        if (!isTutorial || isGameOver || tutorialCompleting) return;
+
+        switch (action)
+        {
+            case TutorialAction.LaneSwitch:
+                tutorialLaneSwitched = true;
+                break;
+            case TutorialAction.Jump:
+                tutorialJumped = true;
+                break;
+            case TutorialAction.Slide:
+                tutorialSlid = true;
+                break;
+        }
+
+        if (tutorialLaneSwitched && tutorialJumped && tutorialSlid)
+        {
+            tutorialCompleting = true;
+            tutorialCompleteTimer = 10f;
+        }
+    }
     // Object Pooling lists
     private List<GameObject> groundPool = new List<GameObject>();
     private List<GameObject> tunnelPool = new List<GameObject>();
@@ -80,6 +132,8 @@ public class RunnerGameManager : MonoBehaviour
     private float groundDistanceAccumulator;
     private float tunnelDistanceAccumulator;
 
+    [SerializeField] private GameObject playerPrefab; // Reference to the Player prefab
+
 
     private void Awake()
     {
@@ -95,19 +149,120 @@ public class RunnerGameManager : MonoBehaviour
 
     private void Start()
     {
+        if (redDot == null)
+        {
+            Debug.LogError("Red Dot reference is not set in the RunnerGameManager. Please assign it in the Inspector.");
+        }
         //StartGame();
     }
 
     public void StartGame()
     {
-        // Clean up any existing active objects from previous run
+        characterSlideshow.StopAndHide();
+        if (!hasCompletedTutorialOnce)
+        {
+            StartTutorial();
+        }
+        else
+        {
+            StartActualGame();
+        }
+    }
+
+    public void StartTutorial()
+    {
+        isTutorial = true;
+        tutorialLaneSwitched = false;
+        tutorialJumped = false;
+        tutorialSlid = false;
+
+        playerPrefab.SetActive(true); // Activate the player prefab
         ClearActiveObjects();
-        currentSpeed = initialSpeed;
+        currentSpeed = initialSpeed; // Start moving immediately at comfortable speed
         score = 0f;
         biochipsCollected = 0;
         femaleHormoneCollected = 0;
         generalHormoneCollected = 0;
-        isPlaying = true;
+        isPlaying = true; // Playing immediately
+        isCountingDown = false;
+        isGameOver = false;
+        spawnTimer = 0f;
+        groundDistanceAccumulator = 0f;
+        tunnelDistanceAccumulator = 0f;
+
+        // Initial ground generation
+        nextGroundZ = -12f;
+        float groundZ = nextGroundZ;
+        for (int i = 0; i < initialGroundTiles; i++)
+        {
+            SpawnGroundTile(groundZ);
+            groundZ += groundTileLength;
+        }
+
+        // Initial tunnel generation
+        if (tunnelPrefab != null)
+        {
+            float tunnelZ = 50.4f - tunnelTileLength;
+            for (int i = 0; i < initialTunnelTiles; i++)
+            {
+                SpawnTunnelTile(tunnelZ);
+                tunnelZ += tunnelTileLength;
+            }
+        }
+
+        // Reset player
+        GameObject playerObj = GameObject.Find("Player");
+        if (playerObj != null)
+        {
+            foreach (Transform child in playerObj.transform)
+            {
+                if (child.gameObject.activeSelf)
+                {
+                    PlayerController pc = child.GetComponent<PlayerController>();
+                    if (pc != null)
+                    {
+                        pc.ResetPlayer();
+                    }
+
+                    // Trigger Start animation
+                    Animator animator = child.GetComponent<Animator>();
+                    if (animator != null)
+                    {
+                        animator.SetTrigger("Start");
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    public void StartActualGame()
+    {
+        isTutorial = false;
+        playerPrefab.SetActive(true); // Activate the player prefab when the game starts
+        // Try to auto-find countdown text if not set
+        if (countdownText == null)
+        {
+            var canvas = GameObject.Find("HUD Canvas");
+            if (canvas != null)
+            {
+                var child = canvas.transform.Find("CountdownText");
+                if (child != null)
+                {
+                    countdownText = child.GetComponent<TextMeshProUGUI>();
+                }
+            }
+        }
+
+        // Clean up any existing active objects from previous run
+        ClearActiveObjects();
+        currentSpeed = 0f; // No movement during countdown
+        score = 0f;
+        biochipsCollected = 0;
+        femaleHormoneCollected = 0;
+        generalHormoneCollected = 0;
+        isPlaying = false; // Not playing until countdown ends
+        isCountingDown = true;
         isGameOver = false;
         spawnTimer = 0f;
         groundDistanceAccumulator = 0f;
@@ -140,12 +295,163 @@ public class RunnerGameManager : MonoBehaviour
                 tunnelZ += tunnelTileLength;
             }
         }
+
+        // Pre-spawn some initial collectibles/obstacles closer to the player so they appear sooner
+        PreSpawnInitialObjects();
+
+        // Reset the active child player to starting/idle position
+        GameObject playerObj = GameObject.Find("Player");
+        if (playerObj != null)
+        {
+            foreach (Transform child in playerObj.transform)
+            {
+                if (child.gameObject.activeSelf)
+                {
+                    PlayerController pc = child.GetComponent<PlayerController>();
+                    if (pc != null)
+                    {
+                        pc.ResetPlayer();
+                    }
+                    break;
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Player GameObject not found in the scene.");
+        }
+
+        if (countdownCoroutine != null)
+        {
+            StopCoroutine(countdownCoroutine);
+        }
+        countdownCoroutine = StartCoroutine(CountdownCoroutine());
+    }
+
+    private void PreSpawnInitialObjects()
+    {
+        // Pre-spawn initial collectibles/obstacles at 15m, 30m, and 45m ahead of player
+        float[] initialZs = { 15f, 30f, 45f };
+        foreach (float z in initialZs)
+        {
+            SpawnRandomLaneObject(z);
+        }
+    }
+
+    private IEnumerator CountdownCoroutine()
+    {
+        isCountingDown = true;
+        isPlaying = false;
+
+        string[] countdownSteps = { "3", "2", "1", "GO!" };
+
+        if (countdownText != null)
+        {
+            countdownText.gameObject.SetActive(true);
+            countdownText.color = Color.white;
+        }
+
+        float originalRedDotY = -0.09f;
+        redDot.transform.position = new Vector3(redDot.transform.position.x, 0.1f, redDot.transform.position.z);
+        foreach (string step in countdownSteps)
+        {
+            if (countdownText != null)
+            {
+                countdownText.text = step;
+
+                // Pop animation effect: scale from 1.5 to 1.0
+                float duration = 0.8f; // duration of each number
+                float elapsed = 0f;
+                while (elapsed < duration)
+                {
+                    elapsed += Time.deltaTime;
+                    float progress = elapsed / duration;
+
+                    // Simple pop: scale starts at 1.5, rapidly goes to 1.0, then stays at 1.0
+                    float scale = Mathf.Lerp(1.5f, 1.0f, Mathf.Min(1f, progress * 4f));
+                    countdownText.transform.localScale = new Vector3(scale, scale, 1f);
+
+                    yield return null;
+                }
+            }
+            else
+            {
+                yield return new WaitForSeconds(0.8f);
+            }
+        }
+        redDot.transform.position = new Vector3(redDot.transform.position.x, originalRedDotY, redDot.transform.position.z);
+        // Countdown complete!
+        isCountingDown = false;
+        isPlaying = true;
+        currentSpeed = initialSpeed;
+
+        // Trigger 'Start' animation on the active child player now that countdown is complete
+        GameObject activePlayerObj = GameObject.Find("Player");
+        if (activePlayerObj != null)
+        {
+            foreach (Transform child in activePlayerObj.transform)
+            {
+                if (child.gameObject.activeSelf)
+                {
+                    Animator animator = child.GetComponent<Animator>();
+                    if (animator != null)
+                    {
+                        animator.SetTrigger("Start");
+                        Debug.Log($"Triggered 'Start' on active child player {child.name} after countdown complete");
+                    }
+                    break;
+                }
+            }
+        }
+
         StartTimer();
+
+        // Keep "GO!" on screen for a short moment, then fade out
+        if (countdownText != null)
+        {
+            float elapsed = 0f;
+            while (elapsed < 0.6f)
+            {
+                elapsed += Time.deltaTime;
+                countdownText.color = new Color(1f, 1f, 1f, Mathf.Lerp(1f, 0f, elapsed / 0.6f));
+                yield return null;
+            }
+            countdownText.text = "";
+            countdownText.color = Color.white;
+            countdownText.gameObject.SetActive(false);
+        }
     }
 
     private void Update()
     {
         if (!isPlaying || isGameOver) return;
+
+        if (isTutorial)
+        {
+            currentSpeed = initialSpeed;
+            score = 0f;
+
+            if (tutorialCompleting)
+            {
+                displayObjeects.SetActive(true);
+                playerPrefab.SetActive(false); // Hide the player during tutorial completion
+                tutorialCompleteTimer -= Time.deltaTime;
+                if (tutorialCompleteTimer <= 0f)
+                {
+                    SpawnRandomLaneObject();
+                    displayObjeects.SetActive(false);
+                    playerPrefab.SetActive(true); // Show the player again when starting the actual game
+                    isTutorial = false;
+                    hasCompletedTutorialOnce = true;
+                    tutorialCompleting = false;
+                    StartActualGame();
+                    return;
+                }
+            }
+
+            ScrollAndRecycle();
+            return;
+        }
 
         // Gradually increase game speed to increase difficulty
         currentSpeed = Mathf.Min(maxSpeed, currentSpeed + speedIncreaseRate * Time.deltaTime);
@@ -246,7 +552,7 @@ public class RunnerGameManager : MonoBehaviour
             }
         }
     }
-
+    
     private void SpawnTunnelTile(float zPosition)
     {
         GameObject tunnel;
@@ -335,7 +641,7 @@ public class RunnerGameManager : MonoBehaviour
         SpawnGroundTile(spawnZ);
     }
 
-    private void SpawnRandomLaneObject()
+    private void SpawnRandomLaneObject(float zPos = -1f)
     {
         // Select a random lane (-1 for Left, 0 for Center, 1 for Right)
         int laneIndex = Random.Range(-1, 2);
@@ -344,15 +650,15 @@ public class RunnerGameManager : MonoBehaviour
         // Choose whether to spawn obstacle or collectible (e.g. 40% obstacle, 60% collectible)
         if (Random.value < 0.4f)
         {
-            SpawnObstacle(targetX);
+            SpawnObstacle(targetX, zPos);
         }
         else
         {
-            SpawnCollectible(targetX);
+            SpawnCollectible(targetX, zPos);
         }
     }
 
-    private void SpawnObstacle(float xPos)
+    private void SpawnObstacle(float xPos, float zPos = -1f)
     {
         if (obstaclePrefab == null) return;
 
@@ -388,11 +694,12 @@ public class RunnerGameManager : MonoBehaviour
         {
             targetY += 1.0f;
         }
-        obs.transform.position = new Vector3(xPos, targetY, spawnDistanceZ);
+        float finalZ = zPos < 0f ? spawnDistanceZ : zPos;
+        obs.transform.position = new Vector3(xPos, targetY, finalZ);
         activeObstacles.Add(obs);
     }
 
-    private void SpawnCollectible(float xPos)
+    private void SpawnCollectible(float xPos, float zPos = -1f)
     {
         if (collectiblePrefabs == null || collectiblePrefabs.Length == 0) return;
 
@@ -440,8 +747,8 @@ public class RunnerGameManager : MonoBehaviour
             // Apply correct prefab properties
             if (chosenPrefab.name.Contains("Biochip"))
             {
-                coll.transform.rotation = Quaternion.Euler(270f, 90f, 0f);
-                coll.transform.localScale = Vector3.one;
+                coll.transform.rotation = Quaternion.Euler(180f, 0f, 0f);
+                coll.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
 
                 BoxCollider bc = coll.GetComponent<BoxCollider>();
                 if (bc == null) bc = coll.AddComponent<BoxCollider>();
@@ -472,7 +779,8 @@ public class RunnerGameManager : MonoBehaviour
         {
             spawnY += 2.0f;
         }
-        coll.transform.position = new Vector3(xPos, spawnY, spawnDistanceZ);
+        float finalZ = zPos < 0f ? spawnDistanceZ : zPos;
+        coll.transform.position = new Vector3(xPos, spawnY, finalZ);
         activeCollectibles.Add(coll);
     }
 
@@ -565,7 +873,7 @@ public class RunnerGameManager : MonoBehaviour
             yield return new WaitForSeconds(1f);
 
             timeRemaining -= 1f;
-            Debug.Log("Time remaining: " + timeRemaining);
+            // Debug.Log("Time remaining: " + timeRemaining);
             if (timeRemaining <= 0f)
             {
                 timeRemaining = 0f;
@@ -587,20 +895,78 @@ public class RunnerGameManager : MonoBehaviour
         EndGame();
         // Add your game-over logic here
     }
-    private void EndGame()
+    public void EndGame(bool save = true)
     {
+        if (countdownCoroutine != null)
+        {
+            StopCoroutine(countdownCoroutine);
+            countdownCoroutine = null;
+        }
+        if (countdownText != null)
+        {
+            countdownText.text = "";
+            countdownText.gameObject.SetActive(false);
+        }
+        playerPrefab.SetActive(false); // Deactivate the player prefab when the game ends
+        isCountingDown = false;
         isGameOver = true;
         isPlaying = false;
         currentSpeed = 0f;
-
+        timeRemaining = gameStartTime; // Reset timer for next game
+        timerRunning = false;
         if (RunnerUIController.Instance != null)
         {
             RunnerUIController.Instance.ShowGameOver();
+            redDot.transform.position = new Vector3(redDot.transform.position.x, 0.04f, redDot.transform.position.z);
+            GameObject playerObj = GameObject.Find("Player");
+            if (playerObj != null)
+            {
+                foreach (Transform child in playerObj.transform)
+                {
+                    if (child.gameObject.activeSelf)
+                    {
+                        PlayerController pc = child.GetComponent<PlayerController>();
+                        if (pc != null)
+                        {
+                            pc.ResetPlayer();
+                        }
+
+                        // Trigger Start animation
+                        Animator animator = child.GetComponent<Animator>();
+                        if (animator != null)
+                        {
+                            animator.SetTrigger("Restart");
+                        }
+                        child.transform.Rotate(0, 180, 0);
+                        break;
+                    }
+                }
+            }
+            //playerPrefab.SetActive(false); // Deactivate the player prefab when the game ends
         }
         if (healthMeterController != null)
         {
             healthMeterController.Deactivate();
         }
-
+        if (save)
+        {
+            Connections.SendWebSocketMessage(score);
+        }
+        characterSlideshow.ShowAndStart();
+    }
+    public void SlideshowBegin()
+    {
+        if (characterSlideshow != null)
+        {
+            characterSlideshow.ShowAndStart();
+        }
+    }
+    public void SlideshowEnd()
+    {
+        if (characterSlideshow != null)
+        {
+            characterSlideshow.StopAndHide();
+        }
     }
 }
+

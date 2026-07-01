@@ -6,21 +6,22 @@ public class YourScript : MonoBehaviour
     [SerializeField] private TMP_Text textField;
 
     [Tooltip("Pool of words. One is picked at random each time this virus spawns.")]
-    [SerializeField]
+    
     private string[] wordBank =
     {
-        "Influenza",
-        "COVID-19",
-        "HIV",
-        "Herpes",
-        "Hepatitis",
-        "Norovirus",
-        "Rhinovirus",
-        "Measles",
-        "Rotavirus",
-        "Zika",
-        "Ebola",
-        "HPV",
+        "Anaemia",
+        "Thalassaemia",
+        "Iron Overload",
+        "Familial Hypercholesterollaemia (FH)",
+        "Lipoprotein(a)",
+        "Cardiovascular Risk",
+        "Atherosclerosis",
+        "Metabolic Syndrome",
+        "Insulin Resistance", 
+        "Type 1 diabetes",
+        "Iron Deficiency",
+        "Vitamin B12 Deficiency",
+        "Vitamin D Deficiency"
     };
 
     // Fires on Instantiate AND every time the object is re-enabled from the
