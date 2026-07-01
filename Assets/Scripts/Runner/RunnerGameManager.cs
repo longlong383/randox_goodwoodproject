@@ -70,11 +70,16 @@ public class RunnerGameManager : MonoBehaviour
     private float gameStartTime = 60f;
 
     [SerializeField] private GameObject redDot;
+
+    [SerializeField] private GameObject displayObjeects;
     public enum TutorialAction
     {
         LaneSwitch,
         Jump,
-        Slide
+        Slide,
+
+
+
     }
 
     [Header("Tutorial State")]
@@ -106,7 +111,7 @@ public class RunnerGameManager : MonoBehaviour
         if (tutorialLaneSwitched && tutorialJumped && tutorialSlid)
         {
             tutorialCompleting = true;
-            tutorialCompleteTimer = 1.5f;
+            tutorialCompleteTimer = 10f;
         }
     }
     // Object Pooling lists
@@ -128,6 +133,7 @@ public class RunnerGameManager : MonoBehaviour
     private float tunnelDistanceAccumulator;
 
     [SerializeField] private GameObject playerPrefab; // Reference to the Player prefab
+
 
     private void Awake()
     {
@@ -427,9 +433,14 @@ public class RunnerGameManager : MonoBehaviour
 
             if (tutorialCompleting)
             {
+                displayObjeects.SetActive(true);
+                playerPrefab.SetActive(false); // Hide the player during tutorial completion
                 tutorialCompleteTimer -= Time.deltaTime;
                 if (tutorialCompleteTimer <= 0f)
                 {
+                    SpawnRandomLaneObject();
+                    displayObjeects.SetActive(false);
+                    playerPrefab.SetActive(true); // Show the player again when starting the actual game
                     isTutorial = false;
                     hasCompletedTutorialOnce = true;
                     tutorialCompleting = false;
@@ -541,7 +552,7 @@ public class RunnerGameManager : MonoBehaviour
             }
         }
     }
-
+    
     private void SpawnTunnelTile(float zPosition)
     {
         GameObject tunnel;

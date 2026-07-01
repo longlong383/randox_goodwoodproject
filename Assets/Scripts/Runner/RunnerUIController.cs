@@ -95,8 +95,12 @@ public class RunnerUIController : MonoBehaviour
 
         if (manager.tutorialLaneSwitched && manager.tutorialJumped && manager.tutorialSlid)
         {
-            tutorialText.text = $"TUTORIAL COMPLETED!</b></color></size>\n\n" +
-                                $"<color=green>Great job! Get ready for the actual game...</color>";
+            tutorialText.text = $"\nMOVEMENT TUTORIAL COMPLETED!</b></color></size>\n\n" +
+                                $"<b><color=green>Great job! Let's learn the game mechanics...</color>\n\n" +
+                                $"<b><color=RED>AVOID THE OBSTACLES!</color>\n" +
+                                $"<color=WHITE>Collect Ranchips and Test Kits!</color>\n" +
+                                "<color=WHITE>Ranchips give you extra lives!\n" +
+                                $"<color=WHITE>Ready? Let's go!";
         }
         else
         {
