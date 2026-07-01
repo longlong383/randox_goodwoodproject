@@ -52,9 +52,9 @@ public class Connections : MonoBehaviour
                     Debug.Log("madeit   " + avatar);
                     GameObject.Find("Player").GetComponent<PlayerGenderController>().selectNonBinary();
                 }
-
+                RunnerGameManager.Instance?.SlideshowEnd();
                 //RunnerGameManager.Instance?.StartGame();
-                //loadingScreen.SetActive(false);
+                //loadingScreen.SetActive(false)
                 //startPanel.SetActive(true);
             }
             if (type == "abort")

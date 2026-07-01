@@ -907,6 +907,7 @@ public class RunnerGameManager : MonoBehaviour
             countdownText.text = "";
             countdownText.gameObject.SetActive(false);
         }
+        playerPrefab.SetActive(false); // Deactivate the player prefab when the game ends
         isCountingDown = false;
         isGameOver = true;
         isPlaying = false;
@@ -953,4 +954,19 @@ public class RunnerGameManager : MonoBehaviour
         }
         characterSlideshow.ShowAndStart();
     }
+    public void SlideshowBegin()
+    {
+        if (characterSlideshow != null)
+        {
+            characterSlideshow.ShowAndStart();
+        }
+    }
+    public void SlideshowEnd()
+    {
+        if (characterSlideshow != null)
+        {
+            characterSlideshow.StopAndHide();
+        }
+    }
 }
+
