@@ -113,7 +113,7 @@ class IdentifyMessage
 {
     public string type = "identify";
     public string role = "game";
-    public string instance = "A"; // or "B"
+    public string instance = "D"; // or "B"
 }
 
 
