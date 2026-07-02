@@ -46,12 +46,25 @@ public class RunnerGameManager : MonoBehaviour
 
     [Header("Obstacle & Collectible Spawning")]
     public float spawnInterval = 1.0f;
+    [Tooltip("Smallest gap (seconds) between lane-object spawns, used at max speed.")]
+    public float minSpawnInterval = 0.15f;
+    [Tooltip("Largest gap (seconds) between lane-object spawns, used at zero speed. Lower this to make objects (viruses) appear more often overall, not just relative to collectibles.")]
+    public float maxSpawnInterval = 0.5f;
     [Tooltip("Chance (0 to 1) for a spawned object to float 1 meter above its base height.")]
     [Range(0f, 1f)]
     public float floatAboveChance = 0.5f;
     [Tooltip("Relative chance (0 to 1) of keeping a Biochip when selected. Lower values decrease spawn frequency.")]
     [Range(0f, 1f)]
     public float biochipSpawnChance = 0.4f;
+    [Tooltip("Chance (0 to 1) that a spawned lane object is a Virus obstacle rather than a collectible.")]
+    [Range(0f, 1f)]
+    public float virusSpawnChance = 0.7f;
+    [Tooltip("Minimum number of lanes to spawn into on each spawn tick.")]
+    [Range(1, 3)]
+    public int minLanesPerSpawn = 1;
+    [Tooltip("Maximum number of lanes to spawn into on each spawn tick. At 3, one lane is still always kept obstacle-free so the player always has an escape path.")]
+    [Range(1, 3)]
+    public int maxLanesPerSpawn = 2;
     private float spawnTimer;
 
     [Header("Game State")]
@@ -110,7 +123,7 @@ public class RunnerGameManager : MonoBehaviour
 
         if (tutorialLaneSwitched && tutorialJumped && tutorialSlid)
         {
-            tutorialCompleteTimer = 15f;
+            tutorialCompleteTimer = 8f;
             StartCoroutine(CompleteTutorialAfterDelay());
         }
     }
@@ -467,13 +480,13 @@ public class RunnerGameManager : MonoBehaviour
 
         // Spawn collectibles and obstacles periodically
         spawnTimer += Time.deltaTime;
-        spawnInterval = Mathf.Min(1f, 0.3f + ((maxSpeed - currentSpeed) / maxSpeed) * (7 / 6)); // Adjust spawn interval based on speed
+        spawnInterval = Mathf.Lerp(minSpawnInterval, maxSpawnInterval, (maxSpeed - currentSpeed) / maxSpeed); // Adjust spawn interval based on speed
         if (spawnTimer >= spawnInterval)
         {
             spawnTimer = 0f;
             SpawnRandomLaneObject();
         }
-        Debug.Log($"Current Speed: {currentSpeed}, Score: {score}, Health: {healthScore}");
+        //Debug.Log($"Current Speed: {currentSpeed}, Score: {score}, Health: {healthScore}");
         // Scroll active objects and recycle them when they pass behind the player
         ScrollAndRecycle();
     }
@@ -650,18 +663,44 @@ public class RunnerGameManager : MonoBehaviour
 
     private void SpawnRandomLaneObject(float zPos = -1f)
     {
-        // Select a random lane (-1 for Left, 0 for Center, 1 for Right)
-        int laneIndex = Random.Range(-1, 2);
-        float targetX = laneIndex * laneWidth;
+        // Pick how many of the 3 lanes (-1, 0, 1) get an object this tick
+        int laneCount = Mathf.Clamp(Random.Range(minLanesPerSpawn, maxLanesPerSpawn + 1), 1, 3);
 
-        // Choose whether to spawn obstacle or collectible (e.g. 40% obstacle, 60% collectible)
-        if (Random.value < 0.4f)
+        List<int> lanes = new List<int> { -1, 0, 1 };
+        for (int i = lanes.Count - 1; i > 0; i--)
         {
-            SpawnObstacle(targetX, zPos);
+            int j = Random.Range(0, i + 1);
+            int temp = lanes[i];
+            lanes[i] = lanes[j];
+            lanes[j] = temp;
         }
-        else
+        lanes.RemoveRange(laneCount, lanes.Count - laneCount);
+
+        bool[] isObstacle = new bool[lanes.Count];
+        int obstacleCount = 0;
+        for (int i = 0; i < lanes.Count; i++)
         {
-            SpawnCollectible(targetX, zPos);
+            isObstacle[i] = Random.value < virusSpawnChance;
+            if (isObstacle[i]) obstacleCount++;
+        }
+
+        // Never let all 3 lanes be obstacles at once - the player needs an escape path
+        if (lanes.Count == 3 && obstacleCount == 3)
+        {
+            isObstacle[Random.Range(0, 3)] = false;
+        }
+
+        for (int i = 0; i < lanes.Count; i++)
+        {
+            float targetX = lanes[i] * laneWidth;
+            if (isObstacle[i])
+            {
+                SpawnObstacle(targetX, zPos);
+            }
+            else
+            {
+                SpawnCollectible(targetX, zPos);
+            }
         }
     }
 
@@ -743,6 +782,12 @@ public class RunnerGameManager : MonoBehaviour
                 if (alternatives.Count > 0)
                 {
                     chosenPrefab = alternatives[Random.Range(0, alternatives.Count)];
+                }
+                else
+                {
+                    // No non-Biochip collectible available to substitute in (e.g. Hormone Kits
+                    // are filtered out above) - skip spawning rather than ignoring the chance.
+                    return;
                 }
             }
         }

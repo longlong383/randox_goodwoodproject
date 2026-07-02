@@ -98,8 +98,8 @@ public class RunnerUIController : MonoBehaviour
             tutorialText.text = $"\nMOVEMENT TUTORIAL COMPLETED!</b></color></size>\n\n" +
                                 $"<b><color=green>Great job! Let's learn the game mechanics...</color>\n\n" +
                                 $"<b><color=RED>AVOID THE OBSTACLES!</color>\n" +
-                                $"<color=WHITE>Collect Ranchips and Test Kits!</color>\n" +
-                                "<color=WHITE>Ranchips give you extra lives!\n" +
+                                $"<color=WHITE>Collect Ranchips!\n" +
+                                $"<color=WHITE>Ranchips give you extra lives!\n"  +
                                 $"<color=WHITE>Ready? Let's go!";
         }
         else
