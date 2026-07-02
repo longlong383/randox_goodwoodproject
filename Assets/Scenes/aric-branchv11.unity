@@ -210,7 +210,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1508262702349948814, guid: 53f6f3a6de91c84479ae3aa4e51ec955, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2280435783678184756, guid: 53f6f3a6de91c84479ae3aa4e51ec955, type: 3}
       propertyPath: m_LocalScale.x
@@ -2347,10 +2347,7 @@ PrefabInstance:
     - {fileID: 8252857728124482351, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 4610679301007125629, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
 --- !u!4 &590889749 stripped
 Transform:
@@ -5516,8 +5513,8 @@ MonoBehaviour:
   Connections: {fileID: 1448044563}
   characterSlideshow: {fileID: 776115209}
   initialSpeed: 12
-  speedIncreaseRate: 0
-  maxSpeed: 12
+  speedIncreaseRate: 0.5
+  maxSpeed: 30
   currentSpeed: 0
   laneWidth: 2
   spawnDistanceZ: 50

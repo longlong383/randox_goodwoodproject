@@ -7,6 +7,15 @@
       "dependencies": {},
       "hash": "522f0c3f5c2ef7273737707effaa840c65e20e98"
     },
+    "com.iam1337.extosc": {
+      "version": "https://github.com/iam1337/extOSC.git#upm",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.ugui": "1.0.0"
+      },
+      "hash": "b7c2bfa81633cbcbc8cc4312e15cb5fbd0ed7d1d"
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 1,

@@ -26,8 +26,8 @@ public class RunnerGameManager : MonoBehaviour
 
 
     public float initialSpeed = 12f;
-    public float speedIncreaseRate = 0.1f;
-    public float maxSpeed = 30f;
+    public float speedIncreaseRate = 1f;
+    public float maxSpeed = 100f;
     public float currentSpeed;
 
     [Header("Spawning Positions")]
@@ -461,12 +461,13 @@ public class RunnerGameManager : MonoBehaviour
 
         // Spawn collectibles and obstacles periodically
         spawnTimer += Time.deltaTime;
+        spawnInterval = Mathf.Min(1f, 0.3f + ((maxSpeed - currentSpeed) / maxSpeed) * (7 / 6)); // Adjust spawn interval based on speed
         if (spawnTimer >= spawnInterval)
         {
             spawnTimer = 0f;
             SpawnRandomLaneObject();
         }
-
+        Debug.Log($"Current Speed: {currentSpeed}, Score: {score}, Health: {healthScore}");
         // Scroll active objects and recycle them when they pass behind the player
         ScrollAndRecycle();
     }
@@ -552,7 +553,7 @@ public class RunnerGameManager : MonoBehaviour
             }
         }
     }
-    
+
     private void SpawnTunnelTile(float zPosition)
     {
         GameObject tunnel;
@@ -825,6 +826,7 @@ public class RunnerGameManager : MonoBehaviour
         {
             EndGame();
         }
+        currentSpeed = initialSpeed; // Reset speed to initial value on hit
     }
 
     private void ClearActiveObjects()
