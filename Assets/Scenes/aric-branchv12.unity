@@ -6362,8 +6362,8 @@ MonoBehaviour:
   Connections: {fileID: 1448044563}
   characterSlideshow: {fileID: 776115209}
   initialSpeed: 12
-  speedIncreaseRate: 0
-  maxSpeed: 12
+  speedIncreaseRate: 0.5
+  maxSpeed: 30
   currentSpeed: 0
   laneWidth: 2
   spawnDistanceZ: 50
