@@ -110,9 +110,15 @@ public class RunnerGameManager : MonoBehaviour
 
         if (tutorialLaneSwitched && tutorialJumped && tutorialSlid)
         {
-            tutorialCompleting = true;
-            tutorialCompleteTimer = 10f;
+            tutorialCompleteTimer = 15f;
+            StartCoroutine(CompleteTutorialAfterDelay());
         }
+    }
+    private IEnumerator CompleteTutorialAfterDelay()
+    {
+        yield return new WaitForSeconds(1f);
+
+        tutorialCompleting = true;
     }
     // Object Pooling lists
     private List<GameObject> groundPool = new List<GameObject>();

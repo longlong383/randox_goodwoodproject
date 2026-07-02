@@ -1,7 +1,7 @@
 using UnityEngine;
 using NativeWebSocket;
-
-
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class Connections : MonoBehaviour
 {
@@ -31,6 +31,7 @@ public class Connections : MonoBehaviour
             string type = jsonItems.type;
             if (type == "start")
             {
+                //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
                 string playerName = jsonItems.playerName;
                 string avatar = jsonItems.avatar;
                 Debug.Log("Player Name: " + playerName);
@@ -61,8 +62,8 @@ public class Connections : MonoBehaviour
             {
                 string score = jsonItems.score;
                 Debug.Log("Score received: " + score);
-                RunnerGameManager.Instance?.EndGame(false); // Call EndGame with save = false
-
+                //RunnerGameManager.Instance?.EndGame(false); // Call EndGame with save = false
+                StartCoroutine(delayedRestart(3f)); // Start the delayed restart coroutine
             }
 
         };
@@ -71,6 +72,12 @@ public class Connections : MonoBehaviour
         await websocket.Connect();
     }
 
+    private IEnumerator delayedRestart(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
 
     public async void SendWebSocketMessage(float score)
     {
@@ -81,7 +88,7 @@ public class Connections : MonoBehaviour
         {
             await websocket.SendText(message);
         }
-
+        StartCoroutine(delayedRestart(10f)); // Start the delayed restart coroutine
     }
 
 
@@ -113,7 +120,7 @@ class IdentifyMessage
 {
     public string type = "identify";
     public string role = "game";
-    public string instance = "D"; // or "B"
+    public string instance = "C"; // or "B"
 }
 
 
