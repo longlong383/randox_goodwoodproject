@@ -110,9 +110,15 @@ public class RunnerGameManager : MonoBehaviour
 
         if (tutorialLaneSwitched && tutorialJumped && tutorialSlid)
         {
-            tutorialCompleting = true;
-            tutorialCompleteTimer = 10f;
+            tutorialCompleteTimer = 15f;
+            StartCoroutine(CompleteTutorialAfterDelay());
         }
+    }
+    private IEnumerator CompleteTutorialAfterDelay()
+    {
+        yield return new WaitForSeconds(1f);
+
+        tutorialCompleting = true;
     }
     // Object Pooling lists
     private List<GameObject> groundPool = new List<GameObject>();
@@ -704,9 +710,21 @@ public class RunnerGameManager : MonoBehaviour
     {
         if (collectiblePrefabs == null || collectiblePrefabs.Length == 0) return;
 
+        // Hormone kits (General and Female) are disabled from spawning
+        List<GameObject> spawnablePrefabs = new List<GameObject>();
+        foreach (var prefab in collectiblePrefabs)
+        {
+            if (prefab != null && !prefab.name.Contains("Hormone Kit"))
+            {
+                spawnablePrefabs.Add(prefab);
+            }
+        }
+
+        if (spawnablePrefabs.Count == 0) return;
+
         GameObject coll = null;
-        int index = Random.Range(0, collectiblePrefabs.Length);
-        GameObject chosenPrefab = collectiblePrefabs[index];
+        int index = Random.Range(0, spawnablePrefabs.Count);
+        GameObject chosenPrefab = spawnablePrefabs[index];
 
         // Decrease spawning frequency of the Biochip prefab
         if (chosenPrefab != null && chosenPrefab.name.Contains("Biochip"))
@@ -714,7 +732,7 @@ public class RunnerGameManager : MonoBehaviour
             if (Random.value > biochipSpawnChance)
             {
                 List<GameObject> alternatives = new List<GameObject>();
-                foreach (var prefab in collectiblePrefabs)
+                foreach (var prefab in spawnablePrefabs)
                 {
                     if (prefab != null && !prefab.name.Contains("Biochip"))
                     {
