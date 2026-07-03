@@ -142,10 +142,24 @@ public class RunnerUIController : MonoBehaviour
         // Space works on the start screen AND the game over screen, but not during countdown
         if ((!isPlaying && !isCountingDown) || isGameOver)
         {
-
-            RunnerGameManager.Instance.StartGame();
-
+            TryStartGame();
         }
+    }
+
+    // Gate for every path that can start/restart the game (Space, Start button, Restart button)
+    // so none of them can bypass the websocket connection check.
+    private void TryStartGame()
+    {
+        if (RunnerGameManager.Instance == null) return;
+
+        Connections connections = RunnerGameManager.Instance.Connections;
+        if (connections == null || !connections.IsConnected)
+        {
+            Debug.Log("Tried to start the game but the websocket is not connected yet - ignoring.");
+            return;
+        }
+
+        RunnerGameManager.Instance.StartGame();
     }
 
     private void SetAllPanelsOff()
@@ -244,12 +258,12 @@ public class RunnerUIController : MonoBehaviour
     private void OnRestartButtonClicked()
     {
         Debug.Log("handled!");
-        RunnerGameManager.Instance?.StartGame();
+        TryStartGame();
     }
 
     private void OnStartButtonClicked()
     {
-        RunnerGameManager.Instance?.StartGame();
+        TryStartGame();
     }
 
 }

@@ -8,6 +8,10 @@ public class Connections : MonoBehaviour
     PlayerGenderController playerGenderController;
     WebSocket websocket;
 
+    // True once the websocket has successfully connected. Used to gate the
+    // space-bar "start" action so players can't start before the server link is up.
+    public bool IsConnected { get; private set; } = false;
+
     async void Start()
     {
         Application.runInBackground = true; // Recommended for WebGL
@@ -16,12 +20,21 @@ public class Connections : MonoBehaviour
 
         websocket.OnOpen += () =>
         {
+            IsConnected = true;
             string message = JsonUtility.ToJson(new IdentifyMessage());
             websocket.SendText(message);
             Debug.Log("Connection open!");
         };
-        websocket.OnError += (e) => Debug.Log("Error! " + e);
-        websocket.OnClose += (code) => Debug.Log("Connection closed!");
+        websocket.OnError += (e) =>
+        {
+            IsConnected = false;
+            Debug.Log("Error! " + e);
+        };
+        websocket.OnClose += (code) =>
+        {
+            IsConnected = false;
+            Debug.Log("Connection closed!");
+        };
 
         websocket.OnMessage += (bytes) =>
         {

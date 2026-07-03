@@ -210,7 +210,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1508262702349948814, guid: 53f6f3a6de91c84479ae3aa4e51ec955, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2280435783678184756, guid: 53f6f3a6de91c84479ae3aa4e51ec955, type: 3}
       propertyPath: m_LocalScale.x
@@ -2456,6 +2456,18 @@ PrefabInstance:
       propertyPath: m_text
       value: Obstacle - AVOID!
       objectReference: {fileID: 0}
+    - target: {fileID: 5303219938100400507, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.02
+      objectReference: {fileID: 0}
+    - target: {fileID: 5303219938100400507, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.02
+      objectReference: {fileID: 0}
+    - target: {fileID: 5303219938100400507, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.02
+      objectReference: {fileID: 0}
     - target: {fileID: 8096545021778847391, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
       propertyPath: m_Name
       value: Virus
@@ -2500,11 +2512,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8888617348345835314, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
+      propertyPath: m_Color.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8888617348345835314, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
+      propertyPath: m_Color.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8888617348345835314, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 8252857728124482351, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4610679301007125629, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 1c44bd1f9e86d5a47a1e71fb325cd1d5, type: 3}
 --- !u!4 &590889749 stripped
 Transform:
@@ -6358,7 +6385,7 @@ MonoBehaviour:
   characterSlideshow: {fileID: 776115209}
   initialSpeed: 12
   speedIncreaseRate: 0.5
-  maxSpeed: 30
+  maxSpeed: 26
   currentSpeed: 0
   laneWidth: 2
   spawnDistanceZ: 50
@@ -7482,7 +7509,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000061035156, y: 767.68}
+  m_AnchoredPosition: {x: -0.00012207031, y: 767.67993}
   m_SizeDelta: {x: 0, y: -761.6001}
   m_Pivot: {x: 0.5, y: 0.2}
 --- !u!114 &1863399569
@@ -7759,7 +7786,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 357.1, y: -92.00012}
+  m_AnchoredPosition: {x: 357.09998, y: -92}
   m_SizeDelta: {x: 120, y: 80}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1895345428
