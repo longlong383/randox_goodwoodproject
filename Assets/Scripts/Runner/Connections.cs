@@ -8,8 +8,18 @@ public class Connections : MonoBehaviour
     PlayerGenderController playerGenderController;
     WebSocket websocket;
 
+    [SerializeField] private GameObject loadingScreen;
+
+    // True once the websocket has successfully connected. Used to gate the
+    // space-bar "start" action so players can't start before the server link is up.
+    public bool IsConnected { get; private set; } = false;
+
+    public bool IsRestarting { get; private set; } = false;
+
+
     async void Start()
     {
+        loadingScreen.SetActive(false);
         Application.runInBackground = true; // Recommended for WebGL
 
         websocket = new WebSocket("wss://randox-fos.guestpass.live/ws");
@@ -20,8 +30,16 @@ public class Connections : MonoBehaviour
             websocket.SendText(message);
             Debug.Log("Connection open!");
         };
-        websocket.OnError += (e) => Debug.Log("Error! " + e);
-        websocket.OnClose += (code) => Debug.Log("Connection closed!");
+        websocket.OnError += (e) =>
+        {
+            IsConnected = false;
+            Debug.Log("Error! " + e);
+        };
+        websocket.OnClose += (code) =>
+        {
+            IsConnected = false;
+            Debug.Log("Connection closed!");
+        };
 
         websocket.OnMessage += (bytes) =>
         {
@@ -31,6 +49,8 @@ public class Connections : MonoBehaviour
             string type = jsonItems.type;
             if (type == "start")
             {
+                loadingScreen.SetActive(true);
+                IsConnected = true;
                 //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
                 string playerName = jsonItems.playerName;
                 string avatar = jsonItems.avatar;
@@ -74,9 +94,11 @@ public class Connections : MonoBehaviour
 
     private IEnumerator delayedRestart(float delay)
     {
+        IsRestarting = true;
         yield return new WaitForSeconds(delay);
 
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        IsRestarting = false;
     }
 
     public async void SendWebSocketMessage(float score)
