@@ -158,7 +158,8 @@ public class RunnerUIController : MonoBehaviour
             Debug.Log("Tried to start the game but the websocket is not connected yet - ignoring.");
             return;
         }
-
+        
+        Debug.Log("Check)ing if the game can be started...");
         RunnerGameManager.Instance.StartGame();
     }
 

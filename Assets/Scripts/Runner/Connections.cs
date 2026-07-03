@@ -20,7 +20,6 @@ public class Connections : MonoBehaviour
 
         websocket.OnOpen += () =>
         {
-            IsConnected = true;
             string message = JsonUtility.ToJson(new IdentifyMessage());
             websocket.SendText(message);
             Debug.Log("Connection open!");
@@ -44,6 +43,7 @@ public class Connections : MonoBehaviour
             string type = jsonItems.type;
             if (type == "start")
             {
+                IsConnected = true;
                 //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
                 string playerName = jsonItems.playerName;
                 string avatar = jsonItems.avatar;
