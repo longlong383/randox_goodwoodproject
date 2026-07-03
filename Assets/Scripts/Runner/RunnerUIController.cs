@@ -160,6 +160,11 @@ public class RunnerUIController : MonoBehaviour
         }
         
         Debug.Log("Check)ing if the game can be started...");
+        if (RunnerGameManager.Instance.Connections.IsRestarting)
+        {
+            Debug.Log("Game is currently restarting - ignoring start request.");
+            return;
+        }
         RunnerGameManager.Instance.StartGame();
     }
 

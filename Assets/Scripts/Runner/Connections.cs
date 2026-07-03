@@ -12,6 +12,9 @@ public class Connections : MonoBehaviour
     // space-bar "start" action so players can't start before the server link is up.
     public bool IsConnected { get; private set; } = false;
 
+    public bool IsRestarting { get; private set; } = false;
+
+
     async void Start()
     {
         Application.runInBackground = true; // Recommended for WebGL
@@ -87,9 +90,11 @@ public class Connections : MonoBehaviour
 
     private IEnumerator delayedRestart(float delay)
     {
+        IsRestarting = true;
         yield return new WaitForSeconds(delay);
 
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        IsRestarting = false;
     }
 
     public async void SendWebSocketMessage(float score)
