@@ -8,6 +8,8 @@ public class Connections : MonoBehaviour
     PlayerGenderController playerGenderController;
     WebSocket websocket;
 
+    [SerializeField] private GameObject loadingScreen;
+
     // True once the websocket has successfully connected. Used to gate the
     // space-bar "start" action so players can't start before the server link is up.
     public bool IsConnected { get; private set; } = false;
@@ -17,6 +19,7 @@ public class Connections : MonoBehaviour
 
     async void Start()
     {
+        loadingScreen.SetActive(false);
         Application.runInBackground = true; // Recommended for WebGL
 
         websocket = new WebSocket("wss://randox-fos.guestpass.live/ws");
@@ -46,6 +49,7 @@ public class Connections : MonoBehaviour
             string type = jsonItems.type;
             if (type == "start")
             {
+                loadingScreen.SetActive(true);
                 IsConnected = true;
                 //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
                 string playerName = jsonItems.playerName;
