@@ -10,6 +10,8 @@ public class Connections : MonoBehaviour
 
     [SerializeField] private GameObject loadingScreen;
 
+    [SerializeField] private GameObject resettingScreen;
+
     // True once the websocket has successfully connected. Used to gate the
     // space-bar "start" action so players can't start before the server link is up.
     public bool IsConnected { get; private set; } = false;
@@ -95,7 +97,16 @@ public class Connections : MonoBehaviour
     private IEnumerator delayedRestart(float delay)
     {
         IsRestarting = true;
-        yield return new WaitForSeconds(delay);
+        if (delay > 2f)
+        {
+            yield return new WaitForSeconds(5f);
+            resettingScreen.SetActive(true);
+            yield return new WaitForSeconds(delay);
+        }
+        else
+        {
+            yield return new WaitForSeconds(delay);
+        }
 
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         IsRestarting = false;
