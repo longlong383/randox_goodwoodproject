@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using extOSC;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -40,10 +43,35 @@ public class PlayerController : MonoBehaviour
     private InputAction slideAction;
     private bool laneSwitchPressed = false;
 
+    [Header("OSC Input")]
+    [SerializeField] private int oscLocalPort = 7001;
+    // Each controller idles at a default address/value and fires the bound
+    // address below when it flips away from that default.
+    [SerializeField] private string oscMoveLeftAddress = "/control/left";   // idle: /control/left/0
+    [SerializeField] private string oscMoveRightAddress = "/control/right"; // idle: /control/right/0
+    [SerializeField] private string oscJumpAddress = "/control/up";         // idle: /control/up/0
+    [SerializeField] private string oscSlideAddress = "/control/down";      // idle: /control/down/1
+    private readonly Dictionary<string, bool> oscAddressActive = new Dictionary<string, bool>();
+
     private void Start()
     {
         // Tag the player to ensure other scripts detect collisions correctly
         gameObject.tag = "Player";
+
+        // Attach (or reuse) the OSC receiver and bind mock commands to player actions.
+        var oscReceiver = gameObject.AddComponent<OSCReceiver>();
+        if (oscReceiver != null)
+        {
+            oscReceiver.LocalPort = oscLocalPort;
+            oscReceiver.Close();
+            oscReceiver.Connect();
+            oscReceiver.Bind("/control/left", message => OnOSCControlMessage(message, MoveLeft));
+            oscReceiver.Bind("/control/right", message => OnOSCControlMessage(message, MoveRight));
+            oscReceiver.Bind("/control/up", message => OnOSCControlMessage(message, Jump));
+            oscReceiver.Bind("/control/down", message => OnOSCControlMessage(message, Slide));
+        }
+
+
 
         // Cache the Animator if not assigned in the Inspector
         if (animator == null)
@@ -96,9 +124,43 @@ public class PlayerController : MonoBehaviour
         HandleMovement();
         HandleSliding();
     }
+    private void MessageReceived(OSCMessage message)
+    {
+        Debug.Log("made it here!");
+        if (message.Values.Count == 0)
+        {
+            Debug.Log($"PlayerController: Received OSC message at address {message.Address} with no value");
+            return;
+        }
+        Debug.Log($"PlayerController: Received OSC message at address {message.Address} with value {message.Values[0]}");
+    }
 
+    /// <summary>Dispatches a bound OSC control message to its action, firing only on the
+    /// rising edge (idle -> active) so a held button doesn't re-trigger every tick.</summary>
+    private void OnOSCControlMessage(OSCMessage message, Action onActivated)
+    {
+        Debug.Log("made it here!");
+        // switch the active value for down control:
+
+        bool isActive = message.Values.Count > 0 && message.Values[0].FloatValue > 0.5f;
+        if (message.Address == oscSlideAddress)
+        { // slide is active when the value is low (0) and idle when high (1)
+            isActive = message.Values.Count > 0 && message.Values[0].FloatValue < 0.5f;
+        }
+        oscAddressActive.TryGetValue(message.Address, out bool wasActive);
+        Debug.Log($"PlayerController: OSC address {message.Address} isActive={isActive}, wasActive={wasActive}");
+        oscAddressActive[message.Address] = isActive;
+
+        if (isActive && !wasActive)
+        {
+            Debug.Log("made it here active");
+            onActivated();
+        }
+    }
     private void HandleInput()
     {
+
+
         // 1. Lane switching discrete check
         if (moveAction != null)
         {
