@@ -84,7 +84,7 @@ public class Connections : MonoBehaviour
                 string score = jsonItems.score;
                 Debug.Log("Score received: " + score);
                 //RunnerGameManager.Instance?.EndGame(false); // Call EndGame with save = false
-                StartCoroutine(delayedRestart(3f)); // Start the delayed restart coroutine
+                immediateRestart(); // Start the delayed restart coroutine
             }
 
         };
@@ -97,21 +97,26 @@ public class Connections : MonoBehaviour
     private IEnumerator delayedRestart(float delay)
     {
         IsRestarting = true;
-        if (delay > 2f)
-        {
-            yield return new WaitForSeconds(5f);
-            resettingScreen.SetActive(true);
-            yield return new WaitForSeconds(delay);
-        }
-        else
-        {
-            yield return new WaitForSeconds(delay);
-        }
+
+
+        yield return new WaitForSeconds(3f);
+        resettingScreen.SetActive(true);
+        yield return new WaitForSeconds(1f);
+
+
 
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         IsRestarting = false;
     }
+    private void immediateRestart()
+    {
+        IsRestarting = true;
 
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        IsRestarting = false;
+
+    }
     public async void SendWebSocketMessage(float score)
     {
         Debug.Log("Sending score: " + score);
