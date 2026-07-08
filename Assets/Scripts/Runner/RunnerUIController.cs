@@ -8,7 +8,7 @@ using System.Collections;
 public class RunnerUIController : MonoBehaviour
 {
     public static RunnerUIController Instance { get; private set; }
-    
+
     [Header("UI Panels")]
     public GameObject startPanel;
     public GameObject gameplayHUD;
@@ -49,7 +49,7 @@ public class RunnerUIController : MonoBehaviour
 
         inputActions = new RunnerUIActions();
         var oscReceiver = gameObject.AddComponent<OSCReceiver>();
-        if(oscReceiver!=null)
+        if (oscReceiver != null)
         {
             oscReceiver.LocalPort = oscLocalPort;
             oscReceiver.Close();
@@ -63,7 +63,17 @@ public class RunnerUIController : MonoBehaviour
         {
             if (value > 0.5f)
             {
-                TryStartGame();
+                if (RunnerGameManager.Instance == null) return;
+
+                bool isPlaying = RunnerGameManager.Instance.isPlaying;
+                bool isGameOver = RunnerGameManager.Instance.isGameOver;
+                bool isCountingDown = RunnerGameManager.Instance.isCountingDown;
+
+                // Space works on the start screen AND the game over screen, but not during countdown
+                if ((!isPlaying && !isCountingDown) || isGameOver)
+                {
+                    TryStartGame();
+                }
             }
         }
     }
@@ -120,7 +130,7 @@ public class RunnerUIController : MonoBehaviour
                                 $"<b><color=green>Great job! Let's learn the game mechanics...</color>\n\n" +
                                 $"<b><color=RED>AVOID THE OBSTACLES!</color>\n" +
                                 $"<color=WHITE>Collect Ranchips!\n" +
-                                $"<color=WHITE>Ranchips give you extra lives!\n"  +
+                                $"<color=WHITE>Ranchips give you extra lives!\n" +
                                 $"<color=WHITE>Ready? Let's go!";
         }
         else
@@ -128,7 +138,7 @@ public class RunnerUIController : MonoBehaviour
             tutorialText.text = $"<color=yellow>LEARN THE MOVEMENT CONTROLS</color></size>\n" +
                                 $"MOVE LEFT AND RIGHT:</b> {laneStatus}\n" +
                                 $"DUCK TO SLIDE:</b> {slideStatus}\n" +
-                                $"HANDS UP TO JUMP:</b> {jumpStatus}\n" ;
+                                $"HANDS UP TO JUMP:</b> {jumpStatus}\n";
         }
     }
 
@@ -179,7 +189,7 @@ public class RunnerUIController : MonoBehaviour
             Debug.Log("Tried to start the game but the websocket is not connected yet - ignoring.");
             return;
         }
-        
+
         Debug.Log("Check)ing if the game can be started...");
         if (RunnerGameManager.Instance.Connections.IsRestarting)
         {
@@ -211,11 +221,11 @@ public class RunnerUIController : MonoBehaviour
         bool isTutorial = RunnerGameManager.Instance.isTutorial;
 
         if (startPanel != null) startPanel.SetActive(!isPlaying && !isGameOver && !isCountingDown);
-        
+
         if (gameplayHUD != null)
         {
             gameplayHUD.SetActive((isPlaying || isCountingDown) && !isGameOver);
-            
+
             if (gameplayHUD.activeSelf)
             {
                 if (tutorialPanel != null)
@@ -236,7 +246,7 @@ public class RunnerUIController : MonoBehaviour
                 }
             }
         }
-        
+
         if (gameOverPanel != null) gameOverPanel.SetActive(isGameOver);
     }
 
