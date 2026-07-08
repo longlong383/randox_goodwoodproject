@@ -1,3 +1,4 @@
+using extOSC;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -7,12 +8,15 @@ using System.Collections;
 public class RunnerUIController : MonoBehaviour
 {
     public static RunnerUIController Instance { get; private set; }
-
+    
     [Header("UI Panels")]
     public GameObject startPanel;
     public GameObject gameplayHUD;
     public GameObject gameOverPanel;
+    [Header("OSC Input")]
+    [SerializeField] private int oscLocalPort = 7001;
 
+    [SerializeField] private string oscAddress = "/control/jump";
     [Header("Gameplay HUD Elements")]
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI biochipsText;
@@ -44,8 +48,25 @@ public class RunnerUIController : MonoBehaviour
         }
 
         inputActions = new RunnerUIActions();
+        var oscReceiver = gameObject.AddComponent<OSCReceiver>();
+        if(oscReceiver!=null)
+        {
+            oscReceiver.LocalPort = oscLocalPort;
+            oscReceiver.Close();
+            oscReceiver.Connect();
+            oscReceiver.Bind(oscAddress, message => OnOSCMessageReceived(message));
+        }
     }
-
+    private void OnOSCMessageReceived(OSCMessage message)
+    {
+        if (message.ToFloat(out float value))
+        {
+            if (value > 0.5f)
+            {
+                TryStartGame();
+            }
+        }
+    }
     private void OnEnable()
     {
         // Enable both action maps
