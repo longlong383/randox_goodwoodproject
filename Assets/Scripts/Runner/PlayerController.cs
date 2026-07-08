@@ -67,8 +67,8 @@ public class PlayerController : MonoBehaviour
             oscReceiver.Connect();
             oscReceiver.Bind("/control/left", message => OnOSCControlMessage(message, MoveLeft));
             oscReceiver.Bind("/control/right", message => OnOSCControlMessage(message, MoveRight));
-            oscReceiver.Bind("/control/up", message => OnOSCControlMessage(message, Jump));
-            oscReceiver.Bind("/control/down", message => OnOSCControlMessage(message, Slide));
+            oscReceiver.Bind("/control/jump", message => OnOSCControlMessage(message, Jump));
+            oscReceiver.Bind("/control/duck", message => OnOSCControlMessage(message, Slide));
         }
 
 
@@ -139,7 +139,6 @@ public class PlayerController : MonoBehaviour
     /// rising edge (idle -> active) so a held button doesn't re-trigger every tick.</summary>
     private void OnOSCControlMessage(OSCMessage message, Action onActivated)
     {
-        Debug.Log("made it here!");
         // switch the active value for down control:
 
         bool isActive = message.Values.Count > 0 && message.Values[0].FloatValue > 0.5f;
@@ -148,12 +147,10 @@ public class PlayerController : MonoBehaviour
             isActive = message.Values.Count > 0 && message.Values[0].FloatValue < 0.5f;
         }
         oscAddressActive.TryGetValue(message.Address, out bool wasActive);
-        Debug.Log($"PlayerController: OSC address {message.Address} isActive={isActive}, wasActive={wasActive}");
         oscAddressActive[message.Address] = isActive;
 
         if (isActive && !wasActive)
         {
-            Debug.Log("made it here active");
             onActivated();
         }
     }

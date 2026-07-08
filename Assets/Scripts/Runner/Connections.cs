@@ -23,8 +23,7 @@ public class Connections : MonoBehaviour
     {
         loadingScreen.SetActive(false);
         Application.runInBackground = true; // Recommended for WebGL
-
-        websocket = new WebSocket("wss://randox-fos.guestpass.live/ws");
+        websocket = new WebSocket("ws://192.168.1.200:3002");
 
         websocket.OnOpen += () =>
         {
@@ -90,6 +89,7 @@ public class Connections : MonoBehaviour
 
         };
 
+        Debug.Log("attempting to conect to ...");
 
         await websocket.Connect();
     }
@@ -153,7 +153,7 @@ class IdentifyMessage
 {
     public string type = "identify";
     public string role = "game";
-    public string instance = "C"; // or "B"
+    public string instance = "A"; // or "B"
 }
 
 
