@@ -17,6 +17,8 @@ public class RunnerUIController : MonoBehaviour
     [SerializeField] private int oscLocalPort = 7001;
 
     [SerializeField] private string oscAddress = "/control/jump";
+    private OSCReceiver oscReceiver;
+    private bool isOscReceiverActive = false;
     [Header("Gameplay HUD Elements")]
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI biochipsText;
@@ -48,33 +50,40 @@ public class RunnerUIController : MonoBehaviour
         }
 
         inputActions = new RunnerUIActions();
-        var oscReceiver = gameObject.AddComponent<OSCReceiver>();
+
+        oscReceiver = gameObject.AddComponent<OSCReceiver>();
         if (oscReceiver != null)
         {
             oscReceiver.LocalPort = oscLocalPort;
+            // Start closed - UpdateOSCReceiverState() (called every frame from Update)
+            // will Connect() it once the start/loading screen is confirmed active.
             oscReceiver.Close();
-            oscReceiver.Connect();
             oscReceiver.Bind(oscAddress, message => OnOSCMessageReceived(message));
         }
     }
+    private bool isStartActive()
+    {
+        if (RunnerGameManager.Instance == null) return false;
+
+        bool isPlaying = RunnerGameManager.Instance.isPlaying;
+        bool isGameOver = RunnerGameManager.Instance.isGameOver;
+        bool isCountingDown = RunnerGameManager.Instance.isCountingDown;
+
+        // Start/loading screen only counts as "active" when none of playing,
+        // counting down, or game-over are true. This matches the startPanel
+        // visibility check in UpdateUIState() and also gates the OSC receiver.
+        return !isPlaying && !isGameOver && !isCountingDown;
+    }
     private void OnOSCMessageReceived(OSCMessage message)
     {
-        if (message.ToFloat(out float value))
+        // Belt-and-braces check: the receiver itself is only ever connected while
+        // the start/loading screen is active (see UpdateOSCReceiverState()), but
+        // this guards against a message that was already in flight when it closed.
+        if (!isStartActive()) return;
+
+        if (message.ToFloat(out float value) && value > 0.5f)
         {
-            if (value > 0.5f)
-            {
-                if (RunnerGameManager.Instance == null) return;
-
-                bool isPlaying = RunnerGameManager.Instance.isPlaying;
-                bool isGameOver = RunnerGameManager.Instance.isGameOver;
-                bool isCountingDown = RunnerGameManager.Instance.isCountingDown;
-
-                // Space works on the start screen AND the game over screen, but not during countdown
-                if ((!isPlaying && !isCountingDown) || isGameOver)
-                {
-                    TryStartGame();
-                }
-            }
+            TryStartGame();
         }
     }
     private void OnEnable()
@@ -92,6 +101,16 @@ public class RunnerUIController : MonoBehaviour
         inputActions.UI.Start.performed -= OnStartPressed;
         inputActions.UI.Disable();
         inputActions.Gameplay.Disable();
+    }
+
+    private void OnDestroy()
+    {
+        // Don't leave the socket open if this object is destroyed (e.g. scene
+        // unload) while the OSC receiver was still connected.
+        if (oscReceiver != null)
+        {
+            oscReceiver.Close();
+        }
     }
 
     private void Start()
@@ -147,6 +166,7 @@ public class RunnerUIController : MonoBehaviour
         if (RunnerGameManager.Instance == null) return;
 
         UpdateUIState();
+        UpdateOSCReceiverState();
 
         if ((RunnerGameManager.Instance.isPlaying || RunnerGameManager.Instance.isCountingDown) && !RunnerGameManager.Instance.isGameOver)
         {
@@ -206,6 +226,31 @@ public class RunnerUIController : MonoBehaviour
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
     }
 
+    // Keeps the OSC receiver connected only while the start/loading screen is
+    // showing, and closed during countdown, gameplay, and the game-over screen.
+    private void UpdateOSCReceiverState()
+    {
+        SetOSCReceiverActive(isStartActive());
+    }
+
+    private void SetOSCReceiverActive(bool shouldBeActive)
+    {
+        if (oscReceiver == null || shouldBeActive == isOscReceiverActive) return;
+
+        isOscReceiverActive = shouldBeActive;
+
+        if (shouldBeActive)
+        {
+            oscReceiver.Connect();
+            Debug.Log("OSC receiver connected (start screen active).");
+        }
+        else
+        {
+            oscReceiver.Close();
+            Debug.Log("OSC receiver closed (start screen inactive).");
+        }
+    }
+
     private void UpdateUIState()
     {
         if (RunnerGameManager.Instance == null)
@@ -220,7 +265,7 @@ public class RunnerUIController : MonoBehaviour
         bool isCountingDown = RunnerGameManager.Instance.isCountingDown;
         bool isTutorial = RunnerGameManager.Instance.isTutorial;
 
-        if (startPanel != null) startPanel.SetActive(!isPlaying && !isGameOver && !isCountingDown);
+        if (startPanel != null) startPanel.SetActive(isStartActive());
 
         if (gameplayHUD != null)
         {
@@ -304,4 +349,3 @@ public class RunnerUIController : MonoBehaviour
     }
 
 }
-

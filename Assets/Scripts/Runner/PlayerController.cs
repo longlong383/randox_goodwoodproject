@@ -49,9 +49,11 @@ public class PlayerController : MonoBehaviour
     // address below when it flips away from that default.
     [SerializeField] private string oscMoveLeftAddress = "/control/left";   // idle: /control/left/0
     [SerializeField] private string oscMoveRightAddress = "/control/right"; // idle: /control/right/0
-    [SerializeField] private string oscJumpAddress = "/control/up";         // idle: /control/up/0
-    [SerializeField] private string oscSlideAddress = "/control/down";      // idle: /control/down/1
+    [SerializeField] private string oscJumpAddress = "/control/jump";         // idle: /control/up/0
+    [SerializeField] private string oscSlideAddress = "/control/duck";      // idle: /control/down/1
     private readonly Dictionary<string, bool> oscAddressActive = new Dictionary<string, bool>();
+    private OSCReceiver oscReceiver;
+    private bool isOscReceiverActive = false;
 
     private void Start()
     {
@@ -59,19 +61,20 @@ public class PlayerController : MonoBehaviour
         gameObject.tag = "Player";
 
         // Attach (or reuse) the OSC receiver and bind mock commands to player actions.
-        var oscReceiver = gameObject.AddComponent<OSCReceiver>();
+        // Left closed here - UpdateOSCReceiverState() (called every frame from Update)
+        // connects it only while the player is actually controllable (mid-run), and
+        // closes it again on the start/loading screen, during the countdown, and on
+        // game over.
+        oscReceiver = gameObject.AddComponent<OSCReceiver>();
         if (oscReceiver != null)
         {
             oscReceiver.LocalPort = oscLocalPort;
             oscReceiver.Close();
-            oscReceiver.Connect();
             oscReceiver.Bind("/control/left", message => OnOSCControlMessage(message, MoveLeft));
             oscReceiver.Bind("/control/right", message => OnOSCControlMessage(message, MoveRight));
             oscReceiver.Bind("/control/jump", message => OnOSCControlMessage(message, Jump));
             oscReceiver.Bind("/control/duck", message => OnOSCControlMessage(message, Slide));
         }
-
-
 
         // Cache the Animator if not assigned in the Inspector
         if (animator == null)
@@ -114,6 +117,8 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        UpdateOSCReceiverState();
+
         // Don't execute controls if game is over or not playing
         if (RunnerGameManager.Instance != null && (!RunnerGameManager.Instance.isPlaying || RunnerGameManager.Instance.isGameOver))
         {
@@ -124,6 +129,17 @@ public class PlayerController : MonoBehaviour
         HandleMovement();
         HandleSliding();
     }
+
+    private void OnDestroy()
+    {
+        // Don't leave the socket open if this object is destroyed (e.g. scene
+        // unload) while the OSC receiver was still connected.
+        if (oscReceiver != null)
+        {
+            oscReceiver.Close();
+        }
+    }
+
     private void MessageReceived(OSCMessage message)
     {
         Debug.Log("made it here!");
@@ -140,7 +156,7 @@ public class PlayerController : MonoBehaviour
     private void OnOSCControlMessage(OSCMessage message, Action onActivated)
     {
         // switch the active value for down control:
-
+        MessageReceived(message);
         bool isActive = message.Values.Count > 0 && message.Values[0].FloatValue > 0.5f;
         if (message.Address == oscSlideAddress)
         { // slide is active when the value is low (0) and idle when high (1)
@@ -154,6 +170,40 @@ public class PlayerController : MonoBehaviour
             onActivated();
         }
     }
+
+    /// <summary>True only during actual gameplay - not on the start/loading screen,
+    /// during the countdown, or after game over. Gates the OSC receiver so it only
+    /// listens while the player can actually be moved.</summary>
+    private bool IsPlayerActive()
+    {
+        if (RunnerGameManager.Instance == null) return false;
+
+        return RunnerGameManager.Instance.isPlaying && !RunnerGameManager.Instance.isGameOver;
+    }
+
+    private void UpdateOSCReceiverState()
+    {
+        SetOSCReceiverActive(IsPlayerActive());
+    }
+
+    private void SetOSCReceiverActive(bool shouldBeActive)
+    {
+        if (oscReceiver == null || shouldBeActive == isOscReceiverActive) return;
+
+        isOscReceiverActive = shouldBeActive;
+
+        if (shouldBeActive)
+        {
+            oscReceiver.Connect();
+            Debug.Log("PlayerController: OSC receiver connected (player active).");
+        }
+        else
+        {
+            oscReceiver.Close();
+            Debug.Log("PlayerController: OSC receiver closed (player inactive).");
+        }
+    }
+
     private void HandleInput()
     {
 
