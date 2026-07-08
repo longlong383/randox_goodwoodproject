@@ -3622,7 +3622,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: HIT 4 - GAMEOVER
+  m_text: HIT 5 - GAMEOVER
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6fffaad46f43a4ea1bec4c7a13390c89, type: 2}
   m_sharedMaterial: {fileID: -623374321848731940, guid: 6fffaad46f43a4ea1bec4c7a13390c89, type: 2}

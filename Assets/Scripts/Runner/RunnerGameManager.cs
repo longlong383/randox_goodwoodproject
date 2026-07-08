@@ -890,6 +890,14 @@ public class RunnerGameManager : MonoBehaviour
             EndGame();
         }
         currentSpeed = initialSpeed; // Reset speed to initial value on hit
+        // delete the virus at contact, following the oncollectiblehit logic:
+        if (activeObstacles.Count > 0)
+        {
+            GameObject virus = activeObstacles[0];
+            activeObstacles.RemoveAt(0);
+            virus.SetActive(false);
+            obstaclePool.Add(virus);
+        }
     }
 
     private void ClearActiveObjects()
