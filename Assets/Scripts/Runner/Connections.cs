@@ -121,7 +121,7 @@ public class Connections : MonoBehaviour
         {
             await websocket.SendText(message);
         }
-        StartCoroutine(delayedRestart(10f)); // Start the delayed restart coroutine
+        StartCoroutine(delayedRestart(3f)); // Start the delayed restart coroutine
     }
 
 
